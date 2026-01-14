@@ -14,8 +14,27 @@
       "Bash(claude plugin list:*)",
       "Bash(claude plugin --help:*)",
       "Bash(claude plugin marketplace --help:*)",
-      "Bash(claude plugin marketplace:*)"
+      "Bash(claude plugin marketplace:*)",
+      "Bash(npx prisma generate)",
+      "Bash(pnpm add:*)",
+      "Bash(npm install:*)",
+      "Bash(npm install)",
+      "Bash(npm run build:*)",
+      "Bash(npm run lint)",
+      "Bash(npx tsc:*)",
+      "Bash(gh pr create:*)",
+      "mcp__github__create_pull_request",
+      "Bash(git fetch:*)",
+      "Bash(git stash:*)",
+      "mcp__github__get_pull_request",
+      "mcp__github__get_pull_request_files",
+      "mcp__github__get_file_contents",
+      "mcp__github__create_pull_request_review"
     ]
   },
-  "enabledMcpjsonServers": ["github", "notionApi"]
+  "enabledMcpjsonServers": [
+    "github",
+    "notionApi"
+  ],
+  "outputStyle": "code-only"
 }
