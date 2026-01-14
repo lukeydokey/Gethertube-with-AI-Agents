@@ -1,0 +1,66 @@
+# Docker Compose for Gethertube-Claude Local Development
+# Usage:
+#   docker compose up -d        # Start all services
+#   docker compose down         # Stop all services
+#   docker compose down -v      # Stop and remove volumes (reset data)
+#   docker compose logs -f      # View logs
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: gethertube-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-gethertube}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gethertube123}
+      POSTGRES_DB: ${POSTGRES_DB:-gethertube}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gethertube} -d ${POSTGRES_DB:-gethertube}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis (for caching, sessions, WebSocket pub/sub)
+  redis:
+    image: redis:7-alpine
+    container_name: gethertube-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # pgAdmin (optional - uncomment to enable database management UI)
+  # pgadmin:
+  #   image: dpage/pgadmin4:latest
+  #   container_name: gethertube-pgadmin
+  #   restart: unless-stopped
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@gethertube.local}
+  #     PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
+  #     PGADMIN_CONFIG_SERVER_MODE: "False"
+  #   ports:
+  #     - "${PGADMIN_PORT:-5050}:80"
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   volumes:
+  #     - pgadmin_data:/var/lib/pgadmin
+
+volumes:
+  postgres_data:
+    name: gethertube-postgres-data
+  redis_data:
+    name: gethertube-redis-data
+  # pgadmin_data:
+  #   name: gethertube-pgadmin-data

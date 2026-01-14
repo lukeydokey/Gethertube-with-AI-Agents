@@ -36,3 +36,6 @@ coverage/
 
 # Claude Code 임시 파일
 tmpclaude-*
+
+# Docker
+.env.docker
