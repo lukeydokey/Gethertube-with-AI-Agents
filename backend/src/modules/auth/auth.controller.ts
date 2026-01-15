@@ -38,9 +38,9 @@ export class AuthController {
     const googleUser = req.user as GoogleUser;
     const authResponse = await this.authService.googleLogin(googleUser);
 
-    // 프론트엔드로 토큰과 함께 리다이렉트
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL');
-    const redirectUrl = `${frontendUrl}/auth/callback?token=${authResponse.accessToken}`;
+    // 프론트엔드로 토큰과 함께 리다이렉트 (URL fragment 사용 - 서버 로그에 노출 방지)
+    const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
+    const redirectUrl = `${frontendUrl}/auth/callback#token=${authResponse.accessToken}`;
 
     res.redirect(redirectUrl);
   }
