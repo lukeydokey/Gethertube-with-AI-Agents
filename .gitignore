@@ -39,3 +39,6 @@ tmpclaude-*
 
 # Docker
 .env.docker
+
+# Local settings for Claude
+.claude/settings.local.json
