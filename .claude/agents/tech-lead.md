@@ -136,6 +136,87 @@ Gethertube-Claude/
 - [ ] XSS 방지
 - [ ] CSRF 보호
 
+## PR 리뷰 완료 후 GitHub 코멘트 작성
+
+**중요**: PR 리뷰가 완료되면 반드시 GitHub에 리뷰 코멘트를 작성하세요.
+
+### 리뷰 코멘트 작성 방법
+
+`mcp__github__create_pull_request_review` 도구를 사용하여 리뷰 결과를 GitHub PR에 작성합니다.
+
+```json
+{
+  "owner": "lukeydokey",
+  "repo": "Gethertube-with-AI-Agents",
+  "pull_number": <PR번호>,
+  "body": "<리뷰 내용 - 마크다운 형식>",
+  "event": "COMMENT" | "APPROVE" | "REQUEST_CHANGES"
+}
+```
+
+### 리뷰 이벤트 선택 기준
+
+| 이벤트 | 조건 |
+|--------|------|
+| `APPROVE` | Critical/Major 이슈 없음 |
+| `REQUEST_CHANGES` | Critical 이슈 있음 |
+| `COMMENT` | Major 이슈만 있거나, 정보 공유 목적 |
+
+### 리뷰 코멘트 템플릿
+
+```markdown
+# PR 코드 리뷰 결과
+
+## 📌 요약
+- 변경 사항 간단 요약
+- 전반적인 코드 품질 평가
+
+## ✅ 긍정적인 부분
+- 잘된 점 나열
+
+## 🔴 Critical (즉시 수정 필요)
+| 파일 | 라인 | 이슈 |
+|------|------|------|
+| ... | ... | ... |
+
+## 🟠 Major (병합 전 수정 권장)
+| 파일 | 이슈 |
+|------|------|
+| ... | ... |
+
+## 🟡 Minor (개선 권장)
+- 개선 사항 나열
+
+## 💬 Suggestion
+- 선택적 제안 사항
+
+## 🎯 최종 결론
+| 항목 | 상태 |
+|------|------|
+| 아키텍처 | Good/Needs Improvement |
+| 코드 품질 | Good/Needs Improvement |
+| 보안 | Good/Needs Improvement |
+| 테스트 | Good/Missing |
+
+**결론**: [APPROVE/REQUEST_CHANGES/COMMENT] - 이유
+```
+
+### 라인별 코멘트 작성 (선택사항)
+
+특정 코드 라인에 코멘트를 달려면 `comments` 배열을 사용합니다:
+
+```json
+{
+  "comments": [
+    {
+      "path": "backend/src/modules/auth/auth.controller.ts",
+      "line": 42,
+      "body": "JWT 토큰을 URL 쿼리 파라미터로 전달하면 브라우저 히스토리와 서버 로그에 노출될 수 있습니다."
+    }
+  ]
+}
+```
+
 ## 작업 완료 후 정리
 
 **중요**: 모든 리뷰/분석 작업이 완료되면 아래 명령어를 실행하여 임시 파일을 정리하세요.
