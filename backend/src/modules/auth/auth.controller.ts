@@ -35,14 +35,17 @@ export class AuthController {
   @ApiOperation({ summary: 'Google OAuth 콜백' })
   @ApiResponse({ status: 302, description: '프론트엔드로 토큰과 함께 리다이렉트' })
   async googleAuthCallback(@Req() req: Request, @Res() res: Response) {
-    const googleUser = req.user as GoogleUser;
-    const authResponse = await this.authService.googleLogin(googleUser);
-
-    // 프론트엔드로 토큰과 함께 리다이렉트 (URL fragment 사용 - 서버 로그에 노출 방지)
     const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
-    const redirectUrl = `${frontendUrl}/auth/callback#token=${authResponse.accessToken}`;
 
-    res.redirect(redirectUrl);
+    try {
+      const googleUser = req.user as GoogleUser;
+      const authResponse = await this.authService.googleLogin(googleUser);
+      const redirectUrl = `${frontendUrl}/auth/callback#token=${authResponse.accessToken}`;
+      res.redirect(redirectUrl);
+    } catch {
+      const errorMessage = encodeURIComponent('Login failed. Please try again.');
+      res.redirect(`${frontendUrl}/auth/callback#error=${errorMessage}`);
+    }
   }
 
   @Get('me')

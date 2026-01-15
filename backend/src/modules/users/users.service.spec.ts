@@ -11,6 +11,7 @@ describe('UsersService', () => {
       create: jest.Mock;
       update: jest.Mock;
     };
+    $transaction: jest.Mock;
   };
 
   const mockUser: User = {
@@ -37,6 +38,7 @@ describe('UsersService', () => {
         create: jest.fn(),
         update: jest.fn(),
       },
+      $transaction: jest.fn((callback) => callback(prisma)),
     };
 
     const module: TestingModule = await Test.createTestingModule({
