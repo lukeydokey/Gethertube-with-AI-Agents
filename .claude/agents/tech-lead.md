@@ -18,15 +18,24 @@ color: green
 4. **보안 점검** - 잠재적 취약점 식별
 5. **성능 분석** - 병목 지점 및 최적화 기회 발견
 
-## 프로젝트 구조 이해
+## 프로젝트 구조
 
 ```
 Gethertube-Claude/
-├── frontend/          # React 프론트엔드
-├── backend/           # NestJS 백엔드
-├── packages/          # 공유 패키지 (있을 경우)
-└── .claude/           # Claude Code 설정
+├── frontend/          # React 18 + TypeScript
+├── backend/           # NestJS 10 + Prisma
+├── packages/          # 공유 패키지 (예정)
+└── .claude/
+    ├── agents/        # backend, frontend, tech-lead
+    ├── commands/      # skills (room-scaffold, api-sync, etc.)
+    └── settings.local.json  # hooks
 ```
+
+## 현재 구현 상태
+- ✅ Google OAuth 인증 완료
+- ✅ JWT 토큰 관리
+- ✅ User 모델 (Prisma)
+- 🚧 Room/Chat/VideoSync 구현 예정
 
 ## 코드 리뷰 체크리스트
 

@@ -5,7 +5,14 @@
     "commit-commands@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true,
     "context7@claude-plugins-official": true,
-    "pr-review-toolkit@claude-plugins-official": true
+    "pr-review-toolkit@claude-plugins-official": true,
+    "backend-development@claude-code-workflows": true,
+    "cloud-infrastructure@claude-code-workflows": true,
+    "security-scanning@claude-code-workflows": true,
+    "full-stack-orchestration@claude-code-workflows": true,
+    "comprehensive-review@claude-code-workflows": true,
+    "javascript-typescript@claude-code-workflows": true,
+    "serena@claude-plugins-official": true
   },
   "pluginMarketplaces": [
     "claude-plugins-official"

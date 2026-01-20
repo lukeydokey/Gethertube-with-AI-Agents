@@ -860,59 +860,57 @@ describe('Button', () => {
 
 ---
 
-## 🎭 Custom Claude Agents
+## 🎭 Custom Claude Agents & Skills
 
-### Tech Lead Agent
+### Agents (병렬 실행 가능)
 
-**File:** `.claude/agents/tech-lead.md`
+#### Tech Lead Agent
+**File:** `.claude/agents/tech-lead.md` | **Model:** Opus | **Color:** Green
 
-**Profile:** 10-year veteran development team lead specializing in code review, architecture, and quality assurance.
+10년차 개발 팀장. 코드 리뷰, 아키텍처, 테스트 총괄.
+- PR 리뷰 및 GitHub 코멘트 작성
+- 보안/성능 분석
 
-**Responsibilities:**
-1. **Code Review** - Priority-based feedback (Critical > Major > Minor > Suggestion)
-2. **Architecture Review** - System design and scalability validation
-3. **Test Quality** - Ensure 80%+ coverage and meaningful tests
-4. **Security Assessment** - Identify vulnerabilities
-5. **Performance Analysis** - Optimization recommendations
+#### Backend Agent
+**File:** `.claude/agents/backend.md` | **Model:** Sonnet | **Color:** Blue
 
-**When to Use:**
-- Before creating pull requests
-- For code review feedback
-- Architecture design validation
-- Security audit needs
+5년차 NestJS 백엔드 개발자. API, DB, WebSocket 구현.
+- NestJS 모듈/컨트롤러/서비스 구현
+- Prisma 스키마 및 마이그레이션
+- WebSocket Gateway 구현
 
-**Example Usage:**
-```bash
-# In Claude Code
-@tech-lead Please review my user authentication module
-```
+#### Frontend Agent
+**File:** `.claude/agents/frontend.md` | **Model:** Sonnet | **Color:** Orange
 
-### Backend Developer Guide
+5년차 React 프론트엔드 개발자. UI, 상태관리, WebSocket 클라이언트.
+- React 컴포넌트/페이지 구현
+- Context API 상태관리
+- WebSocket 클라이언트 hook
 
-**File:** `.claude/commands/backend.md`
+### Custom Skills (Slash Commands)
 
-**Purpose:** Guidelines for implementing NestJS backend features.
+| Command | Purpose |
+|---------|---------|
+| `/room-scaffold <name>` | Room 기능 보일러플레이트 생성 |
+| `/api-sync <module>` | 백엔드 DTO → 프론트엔드 타입 동기화 |
+| `/ws-event <gateway> <event>` | WebSocket 이벤트 핸들러 생성 |
+| `/db-migrate <name>` | 안전한 Prisma 마이그레이션 |
+| `/test-feature <feature>` | 특정 기능 테스트 실행 |
+| `/backend-compact` | 백엔드 문서 최적화 |
+| `/frontend-compact` | 프론트엔드 문서 최적화 |
+| `/full-compact` | 전체 문서 최적화 |
 
-**Covers:**
-- Module creation checklist
-- API design principles (RESTful, versioning)
-- DTO/validation patterns
-- Error handling strategy
-- Security checklist
-- Swagger documentation requirements
+### Claude Code Hooks
 
-### Frontend Developer Guide
+**File:** `.claude/settings.local.json`
 
-**File:** `.claude/commands/frontend.md`
-
-**Purpose:** Guidelines for implementing React frontend features.
-
-**Covers:**
-- Component design patterns
-- State management strategy
-- Performance optimization (memo, useMemo, useCallback)
-- Accessibility (A11y) requirements
-- Responsive design principles
+| Hook | Trigger | Action |
+|------|---------|--------|
+| PreToolExecution | `git commit` | `pnpm lint` |
+| PreToolExecution | `git push` | `pnpm test` |
+| PostToolExecution | Prisma 스키마 수정 | `prisma format` |
+| PostToolExecution | Backend TS 파일 수정 | `lint --fix` |
+| PostToolExecution | Frontend TSX 파일 수정 | `lint --fix` |
 
 ---
 
@@ -980,9 +978,10 @@ const apiUrl = process.env.REACT_APP_API_URL;
 | `README.md` | Project overview and setup instructions |
 | `CLAUDE.md` | This file - AI assistant development guide |
 | `backend/.env.example` | Backend environment variable template |
-| `.claude/agents/tech-lead.md` | Tech lead agent documentation |
-| `.claude/commands/backend.md` | Backend development guide |
-| `.claude/commands/frontend.md` | Frontend development guide |
+| `.claude/agents/tech-lead.md` | Tech Lead agent (code review) |
+| `.claude/agents/backend.md` | Backend agent (NestJS) |
+| `.claude/agents/frontend.md` | Frontend agent (React) |
+| `.claude/settings.local.json` | Claude Code hooks configuration |
 
 ### Development Tools
 
@@ -1036,45 +1035,50 @@ pnpm -r --parallel <command>
 - ✅ TypeScript strict mode enabled
 - ✅ Development workflows ready
 
-### Phase 2: Core Implementation 🚧 NEXT
+### Phase 2: Authentication ✅ COMPLETE
+
+- ✅ Database integration (Prisma 5.22 + PostgreSQL)
+- ✅ Google OAuth 2.0 authentication
+- ✅ JWT token management
+- ✅ User model with Google profile
+- ✅ Frontend AuthContext + ProtectedRoute
+- ✅ Login/Callback pages
+
+### Phase 3: Real-time Features 🚧 IN PROGRESS
 
 **Backend:**
-- [ ] Database integration (Prisma/TypeORM)
-- [ ] User authentication module (JWT)
-- [ ] User authorization (guards, roles)
-- [ ] Room/session management
-- [ ] Video integration (YouTube API)
-- [ ] WebSocket for real-time features
+- [ ] Room/session management module
+- [ ] WebSocket Gateway (Socket.IO)
+- [ ] Chat module
+- [ ] Video sync module
+- [ ] Playlist module
 
 **Frontend:**
-- [ ] Authentication UI (login, register)
-- [ ] Main dashboard/home page
-- [ ] Room creation and management
-- [ ] Video player integration
-- [ ] Real-time synchronization UI
-- [ ] User profile management
+- [ ] Room list/create pages
+- [ ] Room page with video + chat layout
+- [ ] WebSocket hooks (useChat, useVideoSync, usePlaylist)
+- [ ] YouTube player integration
 
-**Shared:**
-- [ ] API integration (frontend ↔ backend)
-- [ ] State management implementation
-- [ ] Comprehensive test coverage
-- [ ] Error handling and validation
+**Database:**
+- [ ] Room, RoomMember models
+- [ ] Message model
+- [ ] VideoSync model
+- [ ] PlaylistItem model
 
-### Phase 3: Enhancement 📅 PLANNED
+### Phase 4: Enhancement 📅 PLANNED
 
-- [ ] Advanced features (chat, reactions, etc.)
+- [ ] Reactions/emoji support
+- [ ] Typing indicators
+- [ ] User presence
 - [ ] Performance optimization
-- [ ] Comprehensive error handling
 - [ ] Monitoring and logging
-- [ ] Analytics integration
 
-### Phase 4: Production Ready 📅 FUTURE
+### Phase 5: Production Ready 📅 FUTURE
 
-- [ ] Security audit and penetration testing
-- [ ] Load testing and optimization
-- [ ] Documentation review and completion
-- [ ] Deployment pipeline (CI/CD)
-- [ ] User acceptance testing
+- [ ] Security audit
+- [ ] Load testing
+- [ ] CI/CD pipeline
+- [ ] Documentation completion
 
 ---
 
@@ -1092,12 +1096,13 @@ For issues, questions, or contributions, please refer to the project's issue tra
 
 | Date | Version | Changes |
 |------|---------|---------|
+| 2026-01-16 | 3.0.0 | Agents 구조 개편, Skills/Hooks 추가, Google OAuth 완료 |
 | 2026-01-13 | 2.0.0 | Complete rewrite based on actual monorepo structure |
 | 2026-01-13 | 1.0.0 | Initial CLAUDE.md creation |
 
 ---
 
-**Last Updated:** 2026-01-13
+**Last Updated:** 2026-01-16
 **Document Maintained By:** AI Assistants & Project Contributors
 
 **Note:** This document should be updated whenever significant project changes occur (new modules, architecture changes, workflow updates, etc.).
