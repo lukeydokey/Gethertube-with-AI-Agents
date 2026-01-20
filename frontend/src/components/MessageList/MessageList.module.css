@@ -1,0 +1,99 @@
+.container {
+  flex: 1;
+  overflow-y: auto;
+  background-color: #2a2a2a;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: 2rem;
+}
+
+.empty p {
+  color: #888;
+  margin: 0.5rem 0;
+}
+
+.emptyHint {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.messageList {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.typingIndicator {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background-color: #333;
+  border-radius: 4px;
+  margin-top: 0.5rem;
+}
+
+.typingDots {
+  display: flex;
+  gap: 4px;
+}
+
+.typingDots span {
+  width: 8px;
+  height: 8px;
+  background-color: #007bff;
+  border-radius: 50%;
+  animation: typing 1.4s infinite;
+}
+
+.typingDots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typingDots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typing {
+  0%,
+  60%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-4px);
+  }
+}
+
+.typingText {
+  font-size: 0.85rem;
+  color: #aaa;
+  font-style: italic;
+}
+
+/* Custom scrollbar */
+.container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.container::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+.container::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}
+
+.container::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
