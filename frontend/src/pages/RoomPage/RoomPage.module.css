@@ -1,0 +1,165 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #1a1a1a;
+  color: #fff;
+}
+
+.loadingContainer,
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: #1a1a1a;
+  color: #fff;
+}
+
+.spinner {
+  border: 4px solid #333;
+  border-top: 4px solid #007bff;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.errorCard {
+  background: #2a2a2a;
+  padding: 2rem;
+  border-radius: 8px;
+  text-align: center;
+  max-width: 500px;
+}
+
+.errorCard h2 {
+  color: #dc3545;
+  margin-bottom: 1rem;
+}
+
+.errorCard p {
+  margin-bottom: 1.5rem;
+  color: #ccc;
+}
+
+.backButton {
+  padding: 0.75rem 1.5rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.backButton:hover {
+  background-color: #0056b3;
+}
+
+.mainContent {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.leftColumn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.rightColumn {
+  width: 350px;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid #333;
+  background-color: #2a2a2a;
+}
+
+.videoSection {
+  background-color: #000;
+  aspect-ratio: 16 / 9;
+  max-height: calc(100vh - 200px);
+}
+
+.playlistSection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: #2a2a2a;
+}
+
+.playlistToggle {
+  padding: 0.75rem;
+  background-color: #333;
+  color: white;
+  border: none;
+  border-top: 1px solid #444;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.playlistToggle:hover {
+  background-color: #444;
+}
+
+.playlistContainer {
+  flex: 1;
+  overflow: hidden;
+}
+
+.memberListSection {
+  max-height: 300px;
+  overflow-y: auto;
+  border-bottom: 1px solid #333;
+}
+
+.chatSection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .mainContent {
+    flex-direction: column;
+  }
+
+  .rightColumn {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid #333;
+    max-height: 400px;
+  }
+
+  .memberListSection {
+    max-height: 150px;
+  }
+}
+
+@media (max-width: 768px) {
+  .videoSection {
+    max-height: 250px;
+  }
+
+  .rightColumn {
+    max-height: 350px;
+  }
+}

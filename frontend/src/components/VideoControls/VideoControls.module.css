@@ -1,0 +1,156 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  background-color: #1a1a1a;
+  border-top: 1px solid #333;
+}
+
+.topRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.videoInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.thumbnail {
+  width: 60px;
+  height: 34px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.videoDetails {
+  flex: 1;
+  min-width: 0;
+}
+
+.videoTitle {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #fff;
+  margin: 0 0 0.25rem 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.videoTime {
+  font-size: 0.8rem;
+  color: #888;
+  margin: 0;
+}
+
+.bottomRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.playButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  flex-shrink: 0;
+}
+
+.playButton:hover {
+  background-color: #0056b3;
+}
+
+.playButton:active {
+  transform: scale(0.95);
+}
+
+.seekBar {
+  flex: 1;
+  position: relative;
+}
+
+.seekInput {
+  width: 100%;
+  height: 6px;
+  background: linear-gradient(to right, #007bff 0%, #007bff 50%, #555 50%, #555 100%);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+}
+
+.seekInput::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background-color: #007bff;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.seekInput::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.seekInput::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background-color: #007bff;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.seekInput::-moz-range-thumb:hover {
+  transform: scale(1.2);
+}
+
+.timeDisplay {
+  font-size: 0.9rem;
+  color: #fff;
+  font-weight: 500;
+  min-width: 50px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .container {
+    padding: 0.75rem;
+  }
+
+  .videoInfo {
+    gap: 0.5rem;
+  }
+
+  .thumbnail {
+    width: 48px;
+    height: 27px;
+  }
+
+  .videoTitle {
+    font-size: 0.85rem;
+  }
+
+  .playButton {
+    width: 36px;
+    height: 36px;
+  }
+}

@@ -1,0 +1,133 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #2a2a2a;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #333;
+}
+
+.title {
+  font-size: 1rem;
+  font-weight: bold;
+  margin: 0;
+  color: #fff;
+}
+
+.count {
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+.memberList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.memberItem {
+  padding: 0.75rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.memberItem:hover {
+  background-color: #333;
+}
+
+.memberInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatarPlaceholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #007bff;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.memberDetails {
+  flex: 1;
+  min-width: 0;
+}
+
+.memberName {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 0.25rem;
+}
+
+.youBadge {
+  font-size: 0.8rem;
+  color: #007bff;
+  margin-left: 0.5rem;
+  font-weight: normal;
+}
+
+.hostBadge,
+.moderatorBadge,
+.memberBadge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.hostBadge {
+  background-color: #ffc107;
+  color: #000;
+}
+
+.moderatorBadge {
+  background-color: #17a2b8;
+  color: white;
+}
+
+.memberBadge {
+  background-color: #6c757d;
+  color: white;
+}
+
+/* Custom scrollbar */
+.memberList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.memberList::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+.memberList::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 3px;
+}
+
+.memberList::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}

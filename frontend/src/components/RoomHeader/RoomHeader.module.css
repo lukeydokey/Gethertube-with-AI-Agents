@@ -1,0 +1,100 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background-color: #2a2a2a;
+  border-bottom: 1px solid #333;
+}
+
+.leftSection {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin: 0 0 0.25rem 0;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.description {
+  font-size: 0.85rem;
+  color: #aaa;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rightSection {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.memberButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #333;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.memberButton:hover {
+  background-color: #444;
+}
+
+.memberIcon {
+  font-size: 1rem;
+}
+
+.memberCount {
+  font-weight: bold;
+  color: #007bff;
+}
+
+.memberText {
+  font-size: 0.9rem;
+}
+
+.leaveButton {
+  padding: 0.5rem 1rem;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.leaveButton:hover {
+  background-color: #c82333;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .rightSection {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .memberText {
+    display: none;
+  }
+}
