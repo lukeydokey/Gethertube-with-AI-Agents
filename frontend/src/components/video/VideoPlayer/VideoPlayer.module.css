@@ -1,0 +1,35 @@
+.container {
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+}
+
+.container iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  background-color: #1a1a2e;
+}
+
+.placeholderText {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+}
+
+.placeholderSubtext {
+  font-size: var(--font-size-sm);
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0;
+}
