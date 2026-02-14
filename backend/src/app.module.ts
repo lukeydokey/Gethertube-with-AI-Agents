@@ -4,6 +4,10 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database';
 import { AuthModule } from './modules/auth';
+import { RoomsModule } from './modules/rooms';
+import { ChatModule } from './modules/chat';
+import { VideoSyncModule } from './modules/video-sync';
+import { PlaylistModule } from './modules/playlist';
 
 @Module({
   imports: [
@@ -13,6 +17,10 @@ import { AuthModule } from './modules/auth';
     }),
     DatabaseModule,
     AuthModule,
+    RoomsModule,
+    ChatModule,
+    VideoSyncModule,
+    PlaylistModule,
   ],
   controllers: [AppController],
   providers: [AppService],
