@@ -7,15 +7,143 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ============================================
+// User Model (Existing - Extended)
+// ============================================
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String?
-  profileImage  String?
-  googleId      String?   @unique
+  id           String  @id @default(cuid())
+  email        String  @unique
+  name         String?
+  profileImage String?
+  googleId     String? @unique
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  hostedRooms   Room[]         @relation("RoomHost")
+  memberships   RoomMember[]
+  messages      Message[]
+  playlistItems PlaylistItem[]
 
   @@map("users")
+}
+
+// ============================================
+// Room Model
+// ============================================
+model Room {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  isPublic    Boolean @default(true)
+  password    String?
+  maxMembers  Int     @default(50)
+
+  hostId String
+  host   User   @relation("RoomHost", fields: [hostId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  members    RoomMember[]
+  videoState VideoState?
+  messages   Message[]
+  playlist   PlaylistItem[]
+
+  @@index([hostId])
+  @@index([isPublic])
+  @@map("rooms")
+}
+
+// ============================================
+// Room Member Model
+// ============================================
+enum RoomRole {
+  HOST
+  MODERATOR
+  MEMBER
+}
+
+model RoomMember {
+  id       String   @id @default(cuid())
+  roomId   String
+  userId   String
+  role     RoomRole @default(MEMBER)
+  joinedAt DateTime @default(now())
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, userId])
+  @@index([roomId])
+  @@index([userId])
+  @@map("room_members")
+}
+
+// ============================================
+// Video State Model
+// ============================================
+model VideoState {
+  id             String   @id @default(cuid())
+  roomId         String   @unique
+  videoId        String?
+  videoTitle     String?
+  videoThumbnail String?
+  currentTime    Float    @default(0)
+  isPlaying      Boolean  @default(false)
+  playbackRate   Float    @default(1.0)
+  lastUpdated    DateTime @default(now())
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@map("video_states")
+}
+
+// ============================================
+// Message Model
+// ============================================
+enum MessageType {
+  TEXT
+  SYSTEM
+  EMOJI
+}
+
+model Message {
+  id        String      @id @default(cuid())
+  roomId    String
+  userId    String
+  content   String
+  type      MessageType @default(TEXT)
+  createdAt DateTime    @default(now())
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, createdAt])
+  @@index([userId])
+  @@map("messages")
+}
+
+// ============================================
+// Playlist Item Model
+// ============================================
+model PlaylistItem {
+  id        String   @id @default(cuid())
+  roomId    String
+  addedById String
+  videoId   String
+  title     String
+  thumbnail String?
+  duration  Int
+  position  Int
+  addedAt   DateTime @default(now())
+
+  room    Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  addedBy User @relation(fields: [addedById], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, position])
+  @@index([roomId])
+  @@map("playlist_items")
 }
