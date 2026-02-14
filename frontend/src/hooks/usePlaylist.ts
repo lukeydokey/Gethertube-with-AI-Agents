@@ -2,9 +2,16 @@ import { useCallback, useEffect, useState } from 'react';
 import { useSocket } from './useSocket';
 import type { PlaylistItemResponse } from '@/types/playlist.types';
 
+interface AddVideoParams {
+  videoId: string;
+  title: string;
+  thumbnail?: string;
+  duration: number;
+}
+
 interface UsePlaylistReturn {
   playlist: PlaylistItemResponse[];
-  addVideo: (videoId: string) => void;
+  addVideo: (params: AddVideoParams) => void;
   removeVideo: (itemId: string) => void;
   reorderPlaylist: (items: { id: string; position: number }[]) => void;
   playNext: () => void;
@@ -12,11 +19,18 @@ interface UsePlaylistReturn {
 }
 
 export const usePlaylist = (roomId: string): UsePlaylistReturn => {
-  const { socket } = useSocket();
+  const { playlistSocket } = useSocket();
   const [playlist, setPlaylist] = useState<PlaylistItemResponse[]>([]);
 
+  // Join the playlist room on the /playlist namespace
   useEffect(() => {
-    if (!socket) return;
+    if (!playlistSocket || !roomId) return;
+
+    playlistSocket.emit('join_playlist_room', { roomId });
+  }, [playlistSocket, roomId]);
+
+  useEffect(() => {
+    if (!playlistSocket) return;
 
     const handlePlaylistUpdated = (payload: { playlist: PlaylistItemResponse[] }) => {
       setPlaylist(payload.playlist);
@@ -30,45 +44,51 @@ export const usePlaylist = (roomId: string): UsePlaylistReturn => {
       setPlaylist((prev) => prev.filter((item) => item.id !== payload.itemId));
     };
 
-    socket.on('playlist_updated', handlePlaylistUpdated);
-    socket.on('video_added', handleVideoAdded);
-    socket.on('video_removed', handleVideoRemoved);
+    playlistSocket.on('playlist_updated', handlePlaylistUpdated);
+    playlistSocket.on('video_added', handleVideoAdded);
+    playlistSocket.on('video_removed', handleVideoRemoved);
 
     return () => {
-      socket.off('playlist_updated', handlePlaylistUpdated);
-      socket.off('video_added', handleVideoAdded);
-      socket.off('video_removed', handleVideoRemoved);
+      playlistSocket.off('playlist_updated', handlePlaylistUpdated);
+      playlistSocket.off('video_added', handleVideoAdded);
+      playlistSocket.off('video_removed', handleVideoRemoved);
     };
-  }, [socket]);
+  }, [playlistSocket]);
 
   const addVideo = useCallback(
-    (videoId: string) => {
-      socket?.emit('add_video', { roomId, videoId });
+    (params: AddVideoParams) => {
+      playlistSocket?.emit('add_video', {
+        roomId,
+        videoId: params.videoId,
+        title: params.title,
+        thumbnail: params.thumbnail,
+        duration: params.duration,
+      });
     },
-    [socket, roomId]
+    [playlistSocket, roomId]
   );
 
   const removeVideo = useCallback(
     (itemId: string) => {
-      socket?.emit('remove_video', { roomId, itemId });
+      playlistSocket?.emit('remove_video', { roomId, itemId });
     },
-    [socket, roomId]
+    [playlistSocket, roomId]
   );
 
   const reorderPlaylist = useCallback(
     (items: { id: string; position: number }[]) => {
-      socket?.emit('reorder_playlist', { roomId, items });
+      playlistSocket?.emit('reorder_playlist', { roomId, items });
     },
-    [socket, roomId]
+    [playlistSocket, roomId]
   );
 
   const playNext = useCallback(() => {
-    socket?.emit('play_next', { roomId });
-  }, [socket, roomId]);
+    playlistSocket?.emit('play_next', { roomId });
+  }, [playlistSocket, roomId]);
 
   const playPrevious = useCallback(() => {
-    socket?.emit('play_previous', { roomId });
-  }, [socket, roomId]);
+    playlistSocket?.emit('play_previous', { roomId });
+  }, [playlistSocket, roomId]);
 
   return { playlist, addVideo, removeVideo, reorderPlaylist, playNext, playPrevious };
 };

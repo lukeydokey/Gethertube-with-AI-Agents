@@ -11,13 +11,20 @@ interface UseChatReturn {
 }
 
 export const useChat = (roomId: string): UseChatReturn => {
-  const { socket } = useSocket();
+  const { chatSocket } = useSocket();
   const [messages, setMessages] = useState<MessageResponse[]>([]);
   const [typingUsers, setTypingUsers] = useState<Map<string, string>>(new Map());
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Join the chat room on the /chat namespace
   useEffect(() => {
-    if (!socket) return;
+    if (!chatSocket || !roomId) return;
+
+    chatSocket.emit('join_chat_room', { roomId });
+  }, [chatSocket, roomId]);
+
+  useEffect(() => {
+    if (!chatSocket) return;
 
     const handleNewMessage = (payload: { message: MessageResponse }) => {
       setMessages((prev) => [...prev, payload.message]);
@@ -43,51 +50,51 @@ export const useChat = (roomId: string): UseChatReturn => {
       setMessages((prev) => prev.filter((m) => m.id !== payload.messageId));
     };
 
-    socket.on('new_message', handleNewMessage);
-    socket.on('user_typing', handleUserTyping);
-    socket.on('user_stopped_typing', handleUserStoppedTyping);
-    socket.on('message_deleted', handleMessageDeleted);
+    chatSocket.on('new_message', handleNewMessage);
+    chatSocket.on('user_typing', handleUserTyping);
+    chatSocket.on('user_stopped_typing', handleUserStoppedTyping);
+    chatSocket.on('message_deleted', handleMessageDeleted);
 
     return () => {
-      socket.off('new_message', handleNewMessage);
-      socket.off('user_typing', handleUserTyping);
-      socket.off('user_stopped_typing', handleUserStoppedTyping);
-      socket.off('message_deleted', handleMessageDeleted);
+      chatSocket.off('new_message', handleNewMessage);
+      chatSocket.off('user_typing', handleUserTyping);
+      chatSocket.off('user_stopped_typing', handleUserStoppedTyping);
+      chatSocket.off('message_deleted', handleMessageDeleted);
     };
-  }, [socket]);
+  }, [chatSocket]);
 
   const sendMessage = useCallback(
     (content: string, type?: MessageType) => {
-      if (!socket || !content.trim()) return;
-      socket.emit('send_message', { roomId, content: content.trim(), type });
+      if (!chatSocket || !content.trim()) return;
+      chatSocket.emit('send_message', { roomId, content: content.trim(), type });
     },
-    [socket, roomId]
+    [chatSocket, roomId]
   );
 
   const startTyping = useCallback(() => {
-    if (!socket) return;
+    if (!chatSocket) return;
 
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
 
-    socket.emit('typing_start', { roomId });
+    chatSocket.emit('typing_start', { roomId });
 
     typingTimeoutRef.current = setTimeout(() => {
-      socket.emit('typing_stop', { roomId });
+      chatSocket.emit('typing_stop', { roomId });
     }, 3000);
-  }, [socket, roomId]);
+  }, [chatSocket, roomId]);
 
   const stopTyping = useCallback(() => {
-    if (!socket) return;
+    if (!chatSocket) return;
 
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
       typingTimeoutRef.current = null;
     }
 
-    socket.emit('typing_stop', { roomId });
-  }, [socket, roomId]);
+    chatSocket.emit('typing_stop', { roomId });
+  }, [chatSocket, roomId]);
 
   return { messages, typingUsers, sendMessage, startTyping, stopTyping };
 };

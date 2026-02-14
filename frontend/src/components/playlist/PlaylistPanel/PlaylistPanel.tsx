@@ -4,10 +4,17 @@ import { extractVideoId, getYouTubeThumbnail, formatDuration } from '@/utils/you
 import type { PlaylistItemResponse } from '@/types/playlist.types';
 import styles from './PlaylistPanel.module.css';
 
+interface AddVideoParams {
+  videoId: string;
+  title: string;
+  thumbnail?: string;
+  duration: number;
+}
+
 interface PlaylistPanelProps {
   playlist: PlaylistItemResponse[];
   currentVideoId: string | null;
-  onAddVideo: (videoId: string) => void;
+  onAddVideo: (params: AddVideoParams) => void;
   onRemoveVideo: (itemId: string) => void;
   onPlayNext: () => void;
   onPlayPrevious: () => void;
@@ -23,8 +30,9 @@ export const PlaylistPanel: React.FC<PlaylistPanelProps> = ({
 }) => {
   const [urlInput, setUrlInput] = useState('');
   const [inputError, setInputError] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
 
-  const handleAddVideo = (e: React.FormEvent) => {
+  const handleAddVideo = async (e: React.FormEvent) => {
     e.preventDefault();
     setInputError(null);
 
@@ -34,8 +42,30 @@ export const PlaylistPanel: React.FC<PlaylistPanelProps> = ({
       return;
     }
 
-    onAddVideo(videoId);
-    setUrlInput('');
+    setAdding(true);
+    try {
+      // Fetch video info via YouTube oEmbed API (no API key needed)
+      const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
+      const response = await fetch(oembedUrl);
+
+      let title = `YouTube Video (${videoId})`;
+      if (response.ok) {
+        const data = await response.json();
+        title = data.title || title;
+      }
+
+      onAddVideo({
+        videoId,
+        title,
+        thumbnail: getYouTubeThumbnail(videoId),
+        duration: 0, // Duration not available via oEmbed; updated by backend if available
+      });
+      setUrlInput('');
+    } catch {
+      setInputError('영상 정보를 가져오는데 실패했습니다.');
+    } finally {
+      setAdding(false);
+    }
   };
 
   return (
@@ -78,7 +108,7 @@ export const PlaylistPanel: React.FC<PlaylistPanelProps> = ({
           }}
           aria-label="YouTube URL 입력"
         />
-        <Button type="submit" variant="primary" size="sm" disabled={!urlInput.trim()}>
+        <Button type="submit" variant="primary" size="sm" disabled={!urlInput.trim() || adding} loading={adding}>
           추가
         </Button>
       </form>

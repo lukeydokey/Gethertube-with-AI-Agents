@@ -13,11 +13,18 @@ interface UseVideoSyncReturn {
 }
 
 export const useVideoSync = (roomId: string): UseVideoSyncReturn => {
-  const { socket } = useSocket();
+  const { videoSocket } = useSocket();
   const [videoState, setVideoState] = useState<VideoStateResponse | null>(null);
 
+  // Join the video room on the /video namespace
   useEffect(() => {
-    if (!socket) return;
+    if (!videoSocket || !roomId) return;
+
+    videoSocket.emit('join_video_room', { roomId });
+  }, [videoSocket, roomId]);
+
+  useEffect(() => {
+    if (!videoSocket) return;
 
     const handleVideoStateChanged = (payload: { videoState: VideoStateResponse }) => {
       setVideoState(payload.videoState);
@@ -27,53 +34,53 @@ export const useVideoSync = (roomId: string): UseVideoSyncReturn => {
       setVideoState(payload.videoState);
     };
 
-    socket.on('video_state_changed', handleVideoStateChanged);
-    socket.on('sync_response', handleSyncResponse);
+    videoSocket.on('video_state_changed', handleVideoStateChanged);
+    videoSocket.on('sync_response', handleSyncResponse);
 
     return () => {
-      socket.off('video_state_changed', handleVideoStateChanged);
-      socket.off('sync_response', handleSyncResponse);
+      videoSocket.off('video_state_changed', handleVideoStateChanged);
+      videoSocket.off('sync_response', handleSyncResponse);
     };
-  }, [socket]);
+  }, [videoSocket]);
 
   const play = useCallback(
     (currentTime: number) => {
-      socket?.emit('video_play', { roomId, currentTime });
+      videoSocket?.emit('video_play', { roomId, currentTime });
     },
-    [socket, roomId]
+    [videoSocket, roomId]
   );
 
   const pause = useCallback(
     (currentTime: number) => {
-      socket?.emit('video_pause', { roomId, currentTime });
+      videoSocket?.emit('video_pause', { roomId, currentTime });
     },
-    [socket, roomId]
+    [videoSocket, roomId]
   );
 
   const seek = useCallback(
     (currentTime: number) => {
-      socket?.emit('video_seek', { roomId, currentTime });
+      videoSocket?.emit('video_seek', { roomId, currentTime });
     },
-    [socket, roomId]
+    [videoSocket, roomId]
   );
 
   const changeVideo = useCallback(
     (videoId: string) => {
-      socket?.emit('video_change', { roomId, videoId });
+      videoSocket?.emit('video_change', { roomId, videoId });
     },
-    [socket, roomId]
+    [videoSocket, roomId]
   );
 
   const changePlaybackRate = useCallback(
     (rate: number) => {
-      socket?.emit('playback_rate_change', { roomId, rate });
+      videoSocket?.emit('playback_rate_change', { roomId, rate });
     },
-    [socket, roomId]
+    [videoSocket, roomId]
   );
 
   const requestSync = useCallback(() => {
-    socket?.emit('sync_request', { roomId });
-  }, [socket, roomId]);
+    videoSocket?.emit('sync_request', { roomId });
+  }, [videoSocket, roomId]);
 
   return {
     videoState,

@@ -2,12 +2,14 @@ import React, { createContext, useCallback, useEffect, useState } from 'react';
 import { Socket } from 'socket.io-client';
 import { useAuth } from '@/hooks/useAuth';
 import { socketService } from '@/services/socket.service';
-import type { ServerToClientEvents, ClientToServerEvents, SocketState } from '@/types/socket.types';
-
-type TypedSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
+import type { NamespaceType } from '@/services/socket.service';
+import type { SocketState } from '@/types/socket.types';
 
 interface SocketContextValue extends SocketState {
-  socket: TypedSocket | null;
+  roomsSocket: Socket | null;
+  chatSocket: Socket | null;
+  videoSocket: Socket | null;
+  playlistSocket: Socket | null;
   connect: () => void;
   disconnect: () => void;
 }
@@ -20,7 +22,12 @@ interface SocketProviderProps {
 
 export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const { token, isAuthenticated } = useAuth();
-  const [socket, setSocket] = useState<TypedSocket | null>(null);
+  const [sockets, setSockets] = useState<Record<NamespaceType, Socket | null>>({
+    rooms: null,
+    chat: null,
+    video: null,
+    playlist: null,
+  });
   const [state, setState] = useState<SocketState>({
     isConnected: false,
     isConnecting: false,
@@ -31,25 +38,34 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     if (!token) return;
 
     setState({ isConnected: false, isConnecting: true, error: null });
-    const sock = socketService.connect(token);
-    setSocket(sock);
 
-    sock.on('connect', () => {
-      setState({ isConnected: true, isConnecting: false, error: null });
-    });
+    const allSockets = socketService.connectAll(token);
+    const roomsSock = allSockets.get('rooms') ?? null;
+    const chatSock = allSockets.get('chat') ?? null;
+    const videoSock = allSockets.get('video') ?? null;
+    const playlistSock = allSockets.get('playlist') ?? null;
 
-    sock.on('disconnect', () => {
-      setState({ isConnected: false, isConnecting: false, error: null });
-    });
+    setSockets({ rooms: roomsSock, chat: chatSock, video: videoSock, playlist: playlistSock });
 
-    sock.on('connect_error', (err) => {
-      setState({ isConnected: false, isConnecting: false, error: err.message });
-    });
+    // Track connection state via the rooms socket (primary)
+    if (roomsSock) {
+      roomsSock.on('connect', () => {
+        setState({ isConnected: true, isConnecting: false, error: null });
+      });
+
+      roomsSock.on('disconnect', () => {
+        setState({ isConnected: false, isConnecting: false, error: null });
+      });
+
+      roomsSock.on('connect_error', (err) => {
+        setState({ isConnected: false, isConnecting: false, error: err.message });
+      });
+    }
   }, [token]);
 
   const disconnect = useCallback(() => {
-    socketService.disconnect();
-    setSocket(null);
+    socketService.disconnectAll();
+    setSockets({ rooms: null, chat: null, video: null, playlist: null });
     setState({ isConnected: false, isConnecting: false, error: null });
   }, []);
 
@@ -64,7 +80,17 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   }, [isAuthenticated, token, connect, disconnect]);
 
   return (
-    <SocketContext.Provider value={{ ...state, socket, connect, disconnect }}>
+    <SocketContext.Provider
+      value={{
+        ...state,
+        roomsSocket: sockets.rooms,
+        chatSocket: sockets.chat,
+        videoSocket: sockets.video,
+        playlistSocket: sockets.playlist,
+        connect,
+        disconnect,
+      }}
+    >
       {children}
     </SocketContext.Provider>
   );

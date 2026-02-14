@@ -1,4 +1,8 @@
-import type { RoomResponse, MemberResponse, VideoStateResponse } from './room.types';
+import type {
+  RoomResponse,
+  MemberResponse,
+  VideoStateResponse,
+} from './room.types';
 import type { MessageResponse } from './chat.types';
 import type { PlaylistItemResponse } from './playlist.types';
 
@@ -40,7 +44,7 @@ export interface MemberJoinedEvent {
  * Member left event (Server -> Room)
  */
 export interface MemberLeftEvent {
-  memberId: string;
+  userId: string;
 }
 
 /**
@@ -93,7 +97,11 @@ export interface ServerToClientEvents {
 export interface ClientToServerEvents {
   join_room: (payload: JoinRoomPayload) => void;
   leave_room: (payload: { roomId: string }) => void;
-  send_message: (payload: { roomId: string; content: string; type?: string }) => void;
+  send_message: (payload: {
+    roomId: string;
+    content: string;
+    type?: string;
+  }) => void;
   typing_start: (payload: { roomId: string }) => void;
   typing_stop: (payload: { roomId: string }) => void;
   video_play: (payload: { roomId: string; currentTime: number }) => void;
@@ -102,9 +110,18 @@ export interface ClientToServerEvents {
   video_change: (payload: { roomId: string; videoId: string }) => void;
   sync_request: (payload: { roomId: string }) => void;
   playback_rate_change: (payload: { roomId: string; rate: number }) => void;
-  add_video: (payload: { roomId: string; videoId: string }) => void;
+  add_video: (payload: {
+    roomId: string;
+    videoId: string;
+    title: string;
+    thumbnail?: string;
+    duration: number;
+  }) => void;
   remove_video: (payload: { roomId: string; itemId: string }) => void;
-  reorder_playlist: (payload: { roomId: string; items: { id: string; position: number }[] }) => void;
+  reorder_playlist: (payload: {
+    roomId: string;
+    items: { id: string; position: number }[];
+  }) => void;
   play_next: (payload: { roomId: string }) => void;
   play_previous: (payload: { roomId: string }) => void;
 }

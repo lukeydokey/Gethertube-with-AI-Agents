@@ -2,7 +2,7 @@ import { useContext } from 'react';
 import { SocketContext } from '@/store/SocketContext';
 
 /**
- * Custom hook to access socket connection
+ * Custom hook to access socket connections (4 namespaces)
  * Must be used within SocketProvider
  */
 export const useSocket = () => {

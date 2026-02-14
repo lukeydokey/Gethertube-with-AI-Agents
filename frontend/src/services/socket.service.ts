@@ -1,57 +1,88 @@
 import { io, Socket } from 'socket.io-client';
-import type { ServerToClientEvents, ClientToServerEvents } from '@/types/socket.types';
-
-type TypedSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 const SOCKET_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
-let socket: TypedSocket | null = null;
+export type NamespaceType = 'rooms' | 'chat' | 'video' | 'playlist';
+
+const sockets = new Map<NamespaceType, Socket>();
+
+const SOCKET_OPTIONS = {
+  transports: ['websocket', 'polling'] as string[],
+  reconnection: true,
+  reconnectionAttempts: 5,
+  reconnectionDelay: 1000,
+};
 
 /**
- * Socket.IO client service
+ * Socket.IO client service with namespace support
+ * Backend uses separate namespaces: /rooms, /chat, /video, /playlist
  */
 export const socketService = {
   /**
-   * Connect to WebSocket server with JWT authentication
+   * Connect to a specific namespace with JWT authentication
    */
-  connect(token: string): TypedSocket {
-    if (socket?.connected) {
-      return socket;
+  connectNamespace(namespace: NamespaceType, token: string): Socket {
+    const existing = sockets.get(namespace);
+    if (existing?.connected) {
+      return existing;
     }
 
-    socket = io(SOCKET_URL, {
+    // Disconnect old socket if exists but not connected
+    existing?.disconnect();
+
+    const socket = io(`${SOCKET_URL}/${namespace}`, {
       auth: { token },
-      transports: ['websocket', 'polling'],
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-    }) as TypedSocket;
+      ...SOCKET_OPTIONS,
+    });
 
+    sockets.set(namespace, socket);
     return socket;
   },
 
   /**
-   * Get current socket instance
+   * Connect to all 4 namespaces
    */
-  getSocket(): TypedSocket | null {
-    return socket;
+  connectAll(token: string): Map<NamespaceType, Socket> {
+    const namespaces: NamespaceType[] = ['rooms', 'chat', 'video', 'playlist'];
+    for (const ns of namespaces) {
+      this.connectNamespace(ns, token);
+    }
+    return sockets;
   },
 
   /**
-   * Disconnect from WebSocket server
+   * Get socket for a specific namespace
    */
-  disconnect(): void {
+  getSocket(namespace: NamespaceType): Socket | null {
+    return sockets.get(namespace) ?? null;
+  },
+
+  /**
+   * Disconnect a specific namespace
+   */
+  disconnectNamespace(namespace: NamespaceType): void {
+    const socket = sockets.get(namespace);
     if (socket) {
       socket.disconnect();
-      socket = null;
+      sockets.delete(namespace);
     }
   },
 
   /**
-   * Check if currently connected
+   * Disconnect all namespaces
    */
-  isConnected(): boolean {
-    return socket?.connected ?? false;
+  disconnectAll(): void {
+    for (const [ns, socket] of sockets) {
+      socket.disconnect();
+      sockets.delete(ns);
+    }
+  },
+
+  /**
+   * Check if a specific namespace is connected
+   */
+  isConnected(namespace: NamespaceType): boolean {
+    return sockets.get(namespace)?.connected ?? false;
   },
 };
 

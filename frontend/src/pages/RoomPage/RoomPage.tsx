@@ -12,13 +12,12 @@ import { usePlaylist } from '@/hooks/usePlaylist';
 import { useToast } from '@/hooks/useToast';
 import { roomService } from '@/services/room.service';
 import type { RoomResponse, MemberResponse } from '@/types/room.types';
-import type { RoomJoinedPayload } from '@/types/socket.types';
 import styles from './RoomPage.module.css';
 
 export const RoomPage: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
-  const { socket, isConnected } = useSocket();
+  const { roomsSocket, isConnected } = useSocket();
   const { showToast } = useToast();
 
   const [room, setRoom] = useState<RoomResponse | null>(null);
@@ -48,13 +47,13 @@ export const RoomPage: React.FC = () => {
     void fetchRoom();
   }, [fetchRoom]);
 
-  // Join room via WebSocket when connected
+  // Join room via /rooms namespace WebSocket
   useEffect(() => {
-    if (!socket || !isConnected || !roomId) return;
+    if (!roomsSocket || !isConnected || !roomId) return;
 
-    socket.emit('join_room', { roomId });
+    roomsSocket.emit('join_room', { roomId });
 
-    const handleRoomJoined = (payload: RoomJoinedPayload) => {
+    const handleRoomJoined = (payload: { room: RoomResponse; members: MemberResponse[] }) => {
       setRoom(payload.room);
       setMembers(payload.members);
     };
@@ -64,13 +63,14 @@ export const RoomPage: React.FC = () => {
       showToast(`${payload.member.name || '사용자'}님이 입장했습니다.`, 'info');
     };
 
-    const handleMemberLeft = (payload: { memberId: string }) => {
+    // Backend sends { userId } not { memberId }
+    const handleMemberLeft = (payload: { userId: string }) => {
       setMembers((prev) => {
-        const left = prev.find((m) => m.id === payload.memberId);
+        const left = prev.find((m) => m.userId === payload.userId);
         if (left) {
           showToast(`${left.name || '사용자'}님이 퇴장했습니다.`, 'info');
         }
-        return prev.filter((m) => m.id !== payload.memberId);
+        return prev.filter((m) => m.userId !== payload.userId);
       });
     };
 
@@ -83,21 +83,21 @@ export const RoomPage: React.FC = () => {
       showToast(payload.message, 'error');
     };
 
-    socket.on('room_joined', handleRoomJoined);
-    socket.on('member_joined', handleMemberJoined);
-    socket.on('member_left', handleMemberLeft);
-    socket.on('room_closed', handleRoomClosed);
-    socket.on('error', handleError);
+    roomsSocket.on('room_joined', handleRoomJoined);
+    roomsSocket.on('member_joined', handleMemberJoined);
+    roomsSocket.on('member_left', handleMemberLeft);
+    roomsSocket.on('room_closed', handleRoomClosed);
+    roomsSocket.on('error', handleError);
 
     return () => {
-      socket.emit('leave_room', { roomId });
-      socket.off('room_joined', handleRoomJoined);
-      socket.off('member_joined', handleMemberJoined);
-      socket.off('member_left', handleMemberLeft);
-      socket.off('room_closed', handleRoomClosed);
-      socket.off('error', handleError);
+      roomsSocket.emit('leave_room', { roomId });
+      roomsSocket.off('room_joined', handleRoomJoined);
+      roomsSocket.off('member_joined', handleMemberJoined);
+      roomsSocket.off('member_left', handleMemberLeft);
+      roomsSocket.off('room_closed', handleRoomClosed);
+      roomsSocket.off('error', handleError);
     };
-  }, [socket, isConnected, roomId, navigate, showToast]);
+  }, [roomsSocket, isConnected, roomId, navigate, showToast]);
 
   if (loading) {
     return <Loading fullPage text="방에 입장하는 중..." />;
