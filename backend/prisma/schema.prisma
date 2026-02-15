@@ -25,6 +25,7 @@ model User {
   memberships   RoomMember[]
   messages      Message[]
   playlistItems PlaylistItem[]
+  reactions     Reaction[]
 
   @@map("users")
 }
@@ -118,12 +119,31 @@ model Message {
   type      MessageType @default(TEXT)
   createdAt DateTime    @default(now())
 
-  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  room      Room       @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reactions Reaction[]
 
   @@index([roomId, createdAt])
   @@index([userId])
   @@map("messages")
+}
+
+// ============================================
+// Reaction Model
+// ============================================
+model Reaction {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
+  @@map("reactions")
 }
 
 // ============================================

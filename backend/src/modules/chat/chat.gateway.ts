@@ -173,6 +173,77 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
+  @SubscribeMessage('add_reaction')
+  @UseGuards(WsJwtAuthGuard)
+  async handleAddReaction(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; messageId: string; emoji: string },
+    @WsCurrentUser() user: User,
+  ) {
+    try {
+      const isMember = await this.roomsService.isMember(data.roomId, user.id);
+      if (!isMember) {
+        client.emit('error', {
+          code: 'CHAT_ERROR',
+          message: 'Not a room member',
+        });
+        return;
+      }
+
+      const reaction = await this.chatService.addReaction(
+        data.messageId,
+        user.id,
+        data.emoji,
+      );
+
+      this.server.to(data.roomId).emit('reaction_added', {
+        messageId: data.messageId,
+        userId: reaction.userId,
+        userName: reaction.userName,
+        emoji: reaction.emoji,
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to add reaction';
+      client.emit('error', { code: 'CHAT_ERROR', message });
+    }
+  }
+
+  @SubscribeMessage('remove_reaction')
+  @UseGuards(WsJwtAuthGuard)
+  async handleRemoveReaction(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; messageId: string; emoji: string },
+    @WsCurrentUser() user: User,
+  ) {
+    try {
+      const isMember = await this.roomsService.isMember(data.roomId, user.id);
+      if (!isMember) {
+        client.emit('error', {
+          code: 'CHAT_ERROR',
+          message: 'Not a room member',
+        });
+        return;
+      }
+
+      await this.chatService.removeReaction(
+        data.messageId,
+        user.id,
+        data.emoji,
+      );
+
+      this.server.to(data.roomId).emit('reaction_removed', {
+        messageId: data.messageId,
+        userId: user.id,
+        emoji: data.emoji,
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to remove reaction';
+      client.emit('error', { code: 'CHAT_ERROR', message });
+    }
+  }
+
   @SubscribeMessage('join_chat_room')
   @UseGuards(WsJwtAuthGuard)
   async handleJoinChatRoom(
