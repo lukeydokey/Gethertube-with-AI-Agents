@@ -4,11 +4,14 @@ import { RoomLayout } from '@/components/layout/RoomLayout';
 import { VideoPlayer } from '@/components/video/VideoPlayer';
 import { ChatBox } from '@/components/chat/ChatBox';
 import { PlaylistPanel } from '@/components/playlist/PlaylistPanel';
+import { MemberList } from '@/components/room/MemberList';
 import { Loading } from '@/components/common/Loading';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { useSocket } from '@/hooks/useSocket';
 import { useChat } from '@/hooks/useChat';
 import { useVideoSync } from '@/hooks/useVideoSync';
 import { usePlaylist } from '@/hooks/usePlaylist';
+import { usePresence } from '@/hooks/usePresence';
 import { useToast } from '@/hooks/useToast';
 import { roomService } from '@/services/room.service';
 import type { RoomResponse, MemberResponse } from '@/types/room.types';
@@ -28,6 +31,7 @@ export const RoomPage: React.FC = () => {
   const chat = useChat(roomId || '');
   const videoSync = useVideoSync(roomId || '');
   const playlist = usePlaylist(roomId || '');
+  const presence = usePresence(roomId || '');
 
   // Fetch room data via REST
   const fetchRoom = useCallback(async () => {
@@ -48,23 +52,25 @@ export const RoomPage: React.FC = () => {
   }, [fetchRoom]);
 
   // Join room via /rooms namespace WebSocket
-  useEffect(() => {
-    if (!roomsSocket || !isConnected || !roomId) return;
-
-    roomsSocket.emit('join_room', { roomId });
-
-    const handleRoomJoined = (payload: { room: RoomResponse; members: MemberResponse[] }) => {
+  const handleRoomJoined = useCallback(
+    (payload: { room: RoomResponse; members: MemberResponse[] }) => {
       setRoom(payload.room);
       setMembers(payload.members);
-    };
+    },
+    [],
+  );
 
-    const handleMemberJoined = (payload: { member: MemberResponse }) => {
+  const handleMemberJoined = useCallback(
+    (payload: { member: MemberResponse }) => {
       setMembers((prev) => [...prev, payload.member]);
       showToast(`${payload.member.name || '사용자'}님이 입장했습니다.`, 'info');
-    };
+    },
+    [showToast],
+  );
 
-    // Backend sends { userId } not { memberId }
-    const handleMemberLeft = (payload: { userId: string }) => {
+  // Backend sends { userId } not { memberId }
+  const handleMemberLeft = useCallback(
+    (payload: { userId: string }) => {
       setMembers((prev) => {
         const left = prev.find((m) => m.userId === payload.userId);
         if (left) {
@@ -72,16 +78,29 @@ export const RoomPage: React.FC = () => {
         }
         return prev.filter((m) => m.userId !== payload.userId);
       });
-    };
+    },
+    [showToast],
+  );
 
-    const handleRoomClosed = (payload: { reason: string }) => {
+  const handleRoomClosed = useCallback(
+    (payload: { reason: string }) => {
       showToast(`방이 닫혔습니다: ${payload.reason}`, 'warning');
       navigate('/rooms');
-    };
+    },
+    [showToast, navigate],
+  );
 
-    const handleError = (payload: { code: string; message: string }) => {
+  const handleError = useCallback(
+    (payload: { code: string; message: string }) => {
       showToast(payload.message, 'error');
-    };
+    },
+    [showToast],
+  );
+
+  useEffect(() => {
+    if (!roomsSocket || !isConnected || !roomId) return;
+
+    roomsSocket.emit('join_room', { roomId });
 
     roomsSocket.on('room_joined', handleRoomJoined);
     roomsSocket.on('member_joined', handleMemberJoined);
@@ -97,7 +116,16 @@ export const RoomPage: React.FC = () => {
       roomsSocket.off('room_closed', handleRoomClosed);
       roomsSocket.off('error', handleError);
     };
-  }, [roomsSocket, isConnected, roomId, navigate, showToast]);
+  }, [
+    roomsSocket,
+    isConnected,
+    roomId,
+    handleRoomJoined,
+    handleMemberJoined,
+    handleMemberLeft,
+    handleRoomClosed,
+    handleError,
+  ]);
 
   if (loading) {
     return <Loading fullPage text="방에 입장하는 중..." />;
@@ -119,39 +147,41 @@ export const RoomPage: React.FC = () => {
   }
 
   return (
-    <RoomLayout roomName={room.name}>
-      <div className={styles.videoArea}>
-        <VideoPlayer
-          videoState={videoSync.videoState}
-          onPlay={(time) => videoSync.play(time)}
-          onPause={(time) => videoSync.pause(time)}
-          onSeek={(time) => videoSync.seek(time)}
-        />
-        <div className={styles.playlistArea}>
-          <PlaylistPanel
-            playlist={playlist.playlist}
-            currentVideoId={videoSync.videoState?.videoId ?? null}
-            onAddVideo={playlist.addVideo}
-            onRemoveVideo={playlist.removeVideo}
-            onPlayNext={playlist.playNext}
-            onPlayPrevious={playlist.playPrevious}
+    <ErrorBoundary>
+      <RoomLayout roomName={room.name}>
+        <div className={styles.videoArea}>
+          <VideoPlayer
+            videoState={videoSync.videoState}
+            onPlay={(time) => videoSync.play(time)}
+            onPause={(time) => videoSync.pause(time)}
+            onSeek={(time) => videoSync.seek(time)}
+          />
+          <div className={styles.playlistArea}>
+            <PlaylistPanel
+              playlist={playlist.playlist}
+              currentVideoId={videoSync.videoState?.videoId ?? null}
+              onAddVideo={playlist.addVideo}
+              onRemoveVideo={playlist.removeVideo}
+              onPlayNext={playlist.playNext}
+              onPlayPrevious={playlist.playPrevious}
+            />
+          </div>
+        </div>
+
+        <div className={styles.sidebar}>
+          <MemberList members={members} presenceMap={presence.presenceMap} />
+          <ChatBox
+            messages={chat.messages}
+            typingUsers={chat.typingUsers}
+            onSendMessage={chat.sendMessage}
+            onTypingStart={chat.startTyping}
+            onTypingStop={chat.stopTyping}
+            onAddReaction={chat.addReaction}
+            onRemoveReaction={chat.removeReaction}
           />
         </div>
-      </div>
-
-      <div className={styles.sidebar}>
-        <div className={styles.memberInfo}>
-          <span className={styles.memberCount}>{members.length}명 참여 중</span>
-        </div>
-        <ChatBox
-          messages={chat.messages}
-          typingUsers={chat.typingUsers}
-          onSendMessage={chat.sendMessage}
-          onTypingStart={chat.startTyping}
-          onTypingStop={chat.stopTyping}
-        />
-      </div>
-    </RoomLayout>
+      </RoomLayout>
+    </ErrorBoundary>
   );
 };
 

@@ -7,7 +7,13 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
-import { Logger, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+import {
+  Logger,
+  UseGuards,
+  UseInterceptors,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { User, MessageType, RoomRole } from '@prisma/client';
@@ -17,7 +23,11 @@ import { ChatService } from './chat.service';
 import { WsJwtAuthGuard } from '../../common/guards/ws-jwt-auth.guard';
 import { WsCurrentUser } from '../../common/decorators/ws-current-user.decorator';
 import { extractTokenFromSocket } from '../../common/utils/ws.utils';
+import { WsLoggingInterceptor } from '../../common/interceptors/ws-logging.interceptor';
+import { AddReactionDto } from './dto/add-reaction.dto';
+import { RemoveReactionDto } from './dto/remove-reaction.dto';
 
+@UseInterceptors(WsLoggingInterceptor)
 @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
 @WebSocketGateway({
   namespace: '/chat',
@@ -169,6 +179,77 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Failed to delete message';
+      client.emit('error', { code: 'CHAT_ERROR', message });
+    }
+  }
+
+  @SubscribeMessage('add_reaction')
+  @UseGuards(WsJwtAuthGuard)
+  async handleAddReaction(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: AddReactionDto,
+    @WsCurrentUser() user: User,
+  ) {
+    try {
+      const isMember = await this.roomsService.isMember(data.roomId, user.id);
+      if (!isMember) {
+        client.emit('error', {
+          code: 'CHAT_ERROR',
+          message: 'Not a room member',
+        });
+        return;
+      }
+
+      const reaction = await this.chatService.addReaction(
+        data.messageId,
+        user.id,
+        data.emoji,
+      );
+
+      this.server.to(data.roomId).emit('reaction_added', {
+        messageId: data.messageId,
+        userId: reaction.userId,
+        userName: reaction.userName,
+        emoji: reaction.emoji,
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to add reaction';
+      client.emit('error', { code: 'CHAT_ERROR', message });
+    }
+  }
+
+  @SubscribeMessage('remove_reaction')
+  @UseGuards(WsJwtAuthGuard)
+  async handleRemoveReaction(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: RemoveReactionDto,
+    @WsCurrentUser() user: User,
+  ) {
+    try {
+      const isMember = await this.roomsService.isMember(data.roomId, user.id);
+      if (!isMember) {
+        client.emit('error', {
+          code: 'CHAT_ERROR',
+          message: 'Not a room member',
+        });
+        return;
+      }
+
+      await this.chatService.removeReaction(
+        data.messageId,
+        user.id,
+        data.emoji,
+      );
+
+      this.server.to(data.roomId).emit('reaction_removed', {
+        messageId: data.messageId,
+        userId: user.id,
+        emoji: data.emoji,
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to remove reaction';
       client.emit('error', { code: 'CHAT_ERROR', message });
     }
   }

@@ -1,0 +1,27 @@
+.indicator {
+  display: inline-block;
+  border-radius: 50%;
+  border: 2px solid var(--color-bg-primary);
+}
+
+.sm {
+  width: 8px;
+  height: 8px;
+}
+
+.md {
+  width: 12px;
+  height: 12px;
+}
+
+.online {
+  background-color: var(--color-presence-online);
+}
+
+.away {
+  background-color: var(--color-presence-away);
+}
+
+.offline {
+  background-color: var(--color-presence-offline);
+}

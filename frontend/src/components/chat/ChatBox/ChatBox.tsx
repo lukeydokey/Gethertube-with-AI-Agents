@@ -1,7 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+} from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { ChatMessage } from '@/components/chat/ChatMessage';
-import type { MessageResponse } from '@/types/chat.types';
+import type { MessageResponse, ReactionEmoji } from '@/types/chat.types';
 import styles from './ChatBox.module.css';
 
 interface ChatBoxProps {
@@ -10,6 +16,8 @@ interface ChatBoxProps {
   onSendMessage: (content: string) => void;
   onTypingStart: () => void;
   onTypingStop: () => void;
+  onAddReaction: (messageId: string, emoji: ReactionEmoji) => void;
+  onRemoveReaction: (messageId: string, emoji: ReactionEmoji) => void;
 }
 
 export const ChatBox: React.FC<ChatBoxProps> = ({
@@ -18,6 +26,8 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   onSendMessage,
   onTypingStart,
   onTypingStop,
+  onAddReaction,
+  onRemoveReaction,
 }) => {
   const { user } = useAuth();
   const [input, setInput] = useState('');
@@ -27,33 +37,44 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-
-    onSendMessage(input);
-    setInput('');
-    onTypingStop();
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInput(e.target.value);
-    if (e.target.value.trim()) {
-      onTypingStart();
-    } else {
-      onTypingStop();
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  const handleSubmit = useCallback(
+    (e: React.FormEvent) => {
       e.preventDefault();
-      handleSubmit(e);
-    }
-  };
+      if (!input.trim()) return;
 
-  const typingNames = Array.from(typingUsers.values()).filter(
-    (name) => name !== user?.name
+      onSendMessage(input);
+      setInput('');
+      onTypingStop();
+    },
+    [input, onSendMessage, onTypingStop],
+  );
+
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setInput(e.target.value);
+      if (e.target.value.trim()) {
+        onTypingStart();
+      } else {
+        onTypingStop();
+      }
+    },
+    [onTypingStart, onTypingStop],
+  );
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSubmit(e);
+      }
+    },
+    [handleSubmit],
+  );
+
+  const typingNames = useMemo(
+    () =>
+      Array.from(typingUsers.values()).filter((name) => name !== user?.name),
+    [typingUsers, user?.name],
   );
 
   return (
@@ -71,6 +92,8 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
             key={msg.id}
             message={msg}
             isOwn={msg.userId === user?.id}
+            onAddReaction={onAddReaction}
+            onRemoveReaction={onRemoveReaction}
           />
         ))}
         <div ref={messagesEndRef} />

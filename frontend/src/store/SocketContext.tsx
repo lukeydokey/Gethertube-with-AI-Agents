@@ -1,6 +1,13 @@
-import React, { createContext, useCallback, useEffect, useState } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { Socket } from 'socket.io-client';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/useToast';
 import { socketService } from '@/services/socket.service';
 import type { NamespaceType } from '@/services/socket.service';
 import type { SocketState } from '@/types/socket.types';
@@ -14,7 +21,9 @@ interface SocketContextValue extends SocketState {
   disconnect: () => void;
 }
 
-export const SocketContext = createContext<SocketContextValue | undefined>(undefined);
+export const SocketContext = createContext<SocketContextValue | undefined>(
+  undefined,
+);
 
 interface SocketProviderProps {
   children: React.ReactNode;
@@ -22,6 +31,8 @@ interface SocketProviderProps {
 
 export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const { token, isAuthenticated } = useAuth();
+  const { showToast } = useToast();
+  const showToastRef = useRef(showToast);
   const [sockets, setSockets] = useState<Record<NamespaceType, Socket | null>>({
     rooms: null,
     chat: null,
@@ -34,6 +45,11 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     error: null,
   });
 
+  // Keep showToastRef up to date to avoid dependency issues
+  useEffect(() => {
+    showToastRef.current = showToast;
+  }, [showToast]);
+
   const connect = useCallback(() => {
     if (!token) return;
 
@@ -45,7 +61,12 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     const videoSock = allSockets.get('video') ?? null;
     const playlistSock = allSockets.get('playlist') ?? null;
 
-    setSockets({ rooms: roomsSock, chat: chatSock, video: videoSock, playlist: playlistSock });
+    setSockets({
+      rooms: roomsSock,
+      chat: chatSock,
+      video: videoSock,
+      playlist: playlistSock,
+    });
 
     // Track connection state via the rooms socket (primary)
     if (roomsSock) {
@@ -58,7 +79,42 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       });
 
       roomsSock.on('connect_error', (err) => {
-        setState({ isConnected: false, isConnecting: false, error: err.message });
+        setState({
+          isConnected: false,
+          isConnecting: false,
+          error: err.message,
+        });
+        showToastRef.current(
+          '서버 연결에 실패했습니다. 다시 시도 중...',
+          'error',
+        );
+      });
+
+      // Reconnection events (Socket.IO automatically retries)
+      roomsSock.io.on('reconnect_attempt', (attempt) => {
+        if (attempt > 1) {
+          showToastRef.current(
+            `서버 재연결 중... (${attempt}번째 시도)`,
+            'info',
+          );
+        }
+      });
+
+      roomsSock.io.on('reconnect', () => {
+        showToastRef.current('서버에 다시 연결되었습니다.', 'success');
+        setState({ isConnected: true, isConnecting: false, error: null });
+      });
+
+      roomsSock.io.on('reconnect_failed', () => {
+        showToastRef.current(
+          '서버 연결에 실패했습니다. 페이지를 새로고침해주세요.',
+          'error',
+        );
+        setState({
+          isConnected: false,
+          isConnecting: false,
+          error: '재연결 실패',
+        });
       });
     }
   }, [token]);

@@ -8,6 +8,7 @@ import { RoomsModule } from './modules/rooms';
 import { ChatModule } from './modules/chat';
 import { VideoSyncModule } from './modules/video-sync';
 import { PlaylistModule } from './modules/playlist';
+import { PresenceModule } from './modules/presence';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { PlaylistModule } from './modules/playlist';
     ChatModule,
     VideoSyncModule,
     PlaylistModule,
+    PresenceModule,
   ],
   controllers: [AppController],
   providers: [AppService],

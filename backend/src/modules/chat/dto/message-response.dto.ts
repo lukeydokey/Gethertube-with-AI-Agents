@@ -1,3 +1,5 @@
+import { ReactionSummaryDto } from './reaction-response.dto';
+
 export class MessageResponseDto {
   id: string;
   roomId: string;
@@ -7,4 +9,7 @@ export class MessageResponseDto {
   content: string;
   type: string;
   createdAt: Date;
+  reactions: ReactionSummaryDto[];
 }
+
+export { ReactionSummaryDto };

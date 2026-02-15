@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/common/Button';
-import { extractVideoId, getYouTubeThumbnail, formatDuration } from '@/utils/youtube.utils';
+import { PlaylistItem } from '@/components/playlist/PlaylistItem';
+import { extractVideoId, getYouTubeThumbnail } from '@/utils/youtube.utils';
 import type { PlaylistItemResponse } from '@/types/playlist.types';
 import styles from './PlaylistPanel.module.css';
 
@@ -71,9 +72,7 @@ export const PlaylistPanel: React.FC<PlaylistPanelProps> = ({
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h3 className={styles.title}>
-          플레이리스트 ({playlist.length})
-        </h3>
+        <h3 className={styles.title}>플레이리스트 ({playlist.length})</h3>
         <div className={styles.controls}>
           <button
             type="button"
@@ -108,7 +107,13 @@ export const PlaylistPanel: React.FC<PlaylistPanelProps> = ({
           }}
           aria-label="YouTube URL 입력"
         />
-        <Button type="submit" variant="primary" size="sm" disabled={!urlInput.trim() || adding} loading={adding}>
+        <Button
+          type="submit"
+          variant="primary"
+          size="sm"
+          disabled={!urlInput.trim() || adding}
+          loading={adding}
+        >
           추가
         </Button>
       </form>
@@ -120,31 +125,12 @@ export const PlaylistPanel: React.FC<PlaylistPanelProps> = ({
           <p className={styles.emptyText}>플레이리스트가 비어있습니다.</p>
         )}
         {playlist.map((item) => (
-          <div
+          <PlaylistItem
             key={item.id}
-            className={`${styles.item} ${item.videoId === currentVideoId ? styles.playing : ''}`}
-          >
-            <img
-              src={item.thumbnail || getYouTubeThumbnail(item.videoId)}
-              alt={item.title}
-              className={styles.thumbnail}
-            />
-            <div className={styles.itemInfo}>
-              <p className={styles.itemTitle}>{item.title}</p>
-              <div className={styles.itemMeta}>
-                <span>{formatDuration(item.duration)}</span>
-                <span>{item.addedBy.name}</span>
-              </div>
-            </div>
-            <button
-              type="button"
-              className={styles.removeButton}
-              onClick={() => onRemoveVideo(item.id)}
-              aria-label={`${item.title} 삭제`}
-            >
-              &times;
-            </button>
-          </div>
+            item={item}
+            isPlaying={item.videoId === currentVideoId}
+            onRemove={onRemoveVideo}
+          />
         ))}
       </div>
     </div>

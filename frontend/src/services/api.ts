@@ -25,7 +25,7 @@ api.interceptors.request.use(
   },
   (error: AxiosError) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 /**
@@ -34,7 +34,18 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    if (error.response?.status === 401) {
+    // Network error (no response received)
+    if (!error.response) {
+      const networkError = new Error(
+        error.message || '네트워크 연결을 확인해주세요.',
+      ) as AxiosError;
+      networkError.isAxiosError = true;
+      networkError.code = error.code;
+      return Promise.reject(networkError);
+    }
+
+    // HTTP 401: Unauthorized - auto logout
+    if (error.response.status === 401) {
       const currentPath = window.location.pathname;
       // Prevent infinite redirect loop
       if (currentPath !== '/login' && currentPath !== '/auth/callback') {
@@ -42,8 +53,18 @@ api.interceptors.response.use(
         window.location.href = '/login';
       }
     }
-    return Promise.reject(error);
-  }
+
+    // Enhance error message for better handling in components
+    const enhancedError = error;
+    if (error.response.data && typeof error.response.data === 'object') {
+      const data = error.response.data as { message?: string };
+      if (data.message) {
+        enhancedError.message = data.message;
+      }
+    }
+
+    return Promise.reject(enhancedError);
+  },
 );
 
 export default api;

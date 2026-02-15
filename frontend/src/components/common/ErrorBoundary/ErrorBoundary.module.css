@@ -1,0 +1,48 @@
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--spacing-lg);
+  background-color: var(--color-bg-primary);
+}
+
+.content {
+  text-align: center;
+  max-width: 480px;
+}
+
+.title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-md);
+}
+
+.message {
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--spacing-lg);
+  line-height: var(--line-height-relaxed);
+}
+
+.retryButton {
+  padding: 12px 24px;
+  background: var(--gradient-primary);
+  color: var(--color-text-inverse);
+  border: none;
+  border-radius: var(--border-radius-lg);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.retryButton:hover {
+  opacity: 0.9;
+}
+
+.retryButton:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
