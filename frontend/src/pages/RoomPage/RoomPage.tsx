@@ -48,23 +48,25 @@ export const RoomPage: React.FC = () => {
   }, [fetchRoom]);
 
   // Join room via /rooms namespace WebSocket
-  useEffect(() => {
-    if (!roomsSocket || !isConnected || !roomId) return;
-
-    roomsSocket.emit('join_room', { roomId });
-
-    const handleRoomJoined = (payload: { room: RoomResponse; members: MemberResponse[] }) => {
+  const handleRoomJoined = useCallback(
+    (payload: { room: RoomResponse; members: MemberResponse[] }) => {
       setRoom(payload.room);
       setMembers(payload.members);
-    };
+    },
+    [],
+  );
 
-    const handleMemberJoined = (payload: { member: MemberResponse }) => {
+  const handleMemberJoined = useCallback(
+    (payload: { member: MemberResponse }) => {
       setMembers((prev) => [...prev, payload.member]);
       showToast(`${payload.member.name || '사용자'}님이 입장했습니다.`, 'info');
-    };
+    },
+    [showToast],
+  );
 
-    // Backend sends { userId } not { memberId }
-    const handleMemberLeft = (payload: { userId: string }) => {
+  // Backend sends { userId } not { memberId }
+  const handleMemberLeft = useCallback(
+    (payload: { userId: string }) => {
       setMembers((prev) => {
         const left = prev.find((m) => m.userId === payload.userId);
         if (left) {
@@ -72,16 +74,29 @@ export const RoomPage: React.FC = () => {
         }
         return prev.filter((m) => m.userId !== payload.userId);
       });
-    };
+    },
+    [showToast],
+  );
 
-    const handleRoomClosed = (payload: { reason: string }) => {
+  const handleRoomClosed = useCallback(
+    (payload: { reason: string }) => {
       showToast(`방이 닫혔습니다: ${payload.reason}`, 'warning');
       navigate('/rooms');
-    };
+    },
+    [showToast, navigate],
+  );
 
-    const handleError = (payload: { code: string; message: string }) => {
+  const handleError = useCallback(
+    (payload: { code: string; message: string }) => {
       showToast(payload.message, 'error');
-    };
+    },
+    [showToast],
+  );
+
+  useEffect(() => {
+    if (!roomsSocket || !isConnected || !roomId) return;
+
+    roomsSocket.emit('join_room', { roomId });
 
     roomsSocket.on('room_joined', handleRoomJoined);
     roomsSocket.on('member_joined', handleMemberJoined);
@@ -97,7 +112,16 @@ export const RoomPage: React.FC = () => {
       roomsSocket.off('room_closed', handleRoomClosed);
       roomsSocket.off('error', handleError);
     };
-  }, [roomsSocket, isConnected, roomId, navigate, showToast]);
+  }, [
+    roomsSocket,
+    isConnected,
+    roomId,
+    handleRoomJoined,
+    handleMemberJoined,
+    handleMemberLeft,
+    handleRoomClosed,
+    handleError,
+  ]);
 
   if (loading) {
     return <Loading fullPage text="방에 입장하는 중..." />;

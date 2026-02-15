@@ -1,0 +1,73 @@
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-md);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+  contain: content;
+}
+
+.item:hover {
+  background-color: var(--color-bg-hover);
+}
+
+.playing {
+  background-color: var(--color-info-light);
+}
+
+.thumbnail {
+  width: 64px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: var(--border-radius-sm);
+  flex-shrink: 0;
+}
+
+.itemInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.itemTitle {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.itemMeta {
+  display: flex;
+  gap: var(--spacing-sm);
+  font-size: 11px;
+  color: var(--color-text-light);
+}
+
+.removeButton {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  background: none;
+  font-size: 16px;
+  color: var(--color-text-light);
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: all var(--transition-fast);
+}
+
+.item:hover .removeButton {
+  opacity: 1;
+}
+
+.removeButton:hover {
+  color: var(--color-error);
+  background-color: var(--color-error-light);
+}

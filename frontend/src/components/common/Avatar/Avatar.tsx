@@ -8,33 +8,33 @@ interface AvatarProps {
   className?: string;
 }
 
-export const Avatar: React.FC<AvatarProps> = ({
-  src,
-  name,
-  size = 'md',
-  className,
-}) => {
-  const initial = name.charAt(0).toUpperCase();
+export const Avatar: React.FC<AvatarProps> = React.memo(
+  ({ src, name, size = 'md', className }) => {
+    const initial = name.charAt(0).toUpperCase();
 
-  if (src) {
+    if (src) {
+      return (
+        <img
+          src={src}
+          alt={name}
+          className={`${styles.avatar} ${styles[size]} ${className || ''}`}
+          referrerPolicy="no-referrer"
+          loading="lazy"
+        />
+      );
+    }
+
     return (
-      <img
-        src={src}
-        alt={name}
-        className={`${styles.avatar} ${styles[size]} ${className || ''}`}
-        referrerPolicy="no-referrer"
-      />
+      <div
+        className={`${styles.placeholder} ${styles[size]} ${className || ''}`}
+        aria-label={name}
+      >
+        {initial}
+      </div>
     );
-  }
+  },
+);
 
-  return (
-    <div
-      className={`${styles.placeholder} ${styles[size]} ${className || ''}`}
-      aria-label={name}
-    >
-      {initial}
-    </div>
-  );
-};
+Avatar.displayName = 'Avatar';
 
 export default Avatar;

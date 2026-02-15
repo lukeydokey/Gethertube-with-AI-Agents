@@ -8,7 +8,7 @@ interface RoomCardProps {
   room: RoomResponse;
 }
 
-export const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
+export const RoomCard: React.FC<RoomCardProps> = React.memo(({ room }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -44,6 +44,8 @@ export const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
       </div>
     </button>
   );
-};
+});
+
+RoomCard.displayName = 'RoomCard';
 
 export default RoomCard;

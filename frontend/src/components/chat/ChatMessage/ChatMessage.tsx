@@ -8,30 +8,36 @@ interface ChatMessageProps {
   isOwn: boolean;
 }
 
-export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isOwn }) => {
-  if (message.type === 'SYSTEM') {
+export const ChatMessage: React.FC<ChatMessageProps> = React.memo(
+  ({ message, isOwn }) => {
+    if (message.type === 'SYSTEM') {
+      return (
+        <div className={styles.systemMessage}>
+          <span className={styles.systemText}>{message.content}</span>
+        </div>
+      );
+    }
+
     return (
-      <div className={styles.systemMessage}>
-        <span className={styles.systemText}>{message.content}</span>
+      <div className={`${styles.message} ${isOwn ? styles.own : ''}`}>
+        {!isOwn && (
+          <Avatar
+            src={message.userProfileImage}
+            name={message.userName}
+            size="sm"
+          />
+        )}
+        <div className={styles.bubble}>
+          {!isOwn && (
+            <span className={styles.userName}>{message.userName}</span>
+          )}
+          <p className={styles.content}>{message.content}</p>
+        </div>
       </div>
     );
-  }
+  },
+);
 
-  return (
-    <div className={`${styles.message} ${isOwn ? styles.own : ''}`}>
-      {!isOwn && (
-        <Avatar
-          src={message.userProfileImage}
-          name={message.userName}
-          size="sm"
-        />
-      )}
-      <div className={styles.bubble}>
-        {!isOwn && <span className={styles.userName}>{message.userName}</span>}
-        <p className={styles.content}>{message.content}</p>
-      </div>
-    </div>
-  );
-};
+ChatMessage.displayName = 'ChatMessage';
 
 export default ChatMessage;
