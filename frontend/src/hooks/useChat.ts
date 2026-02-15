@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSocket } from './useSocket';
+import { useAuth } from './useAuth';
 import type {
   MessageResponse,
   MessageType,
@@ -20,11 +21,18 @@ interface UseChatReturn {
 
 export const useChat = (roomId: string): UseChatReturn => {
   const { chatSocket } = useSocket();
+  const { user } = useAuth();
   const [messages, setMessages] = useState<MessageResponse[]>([]);
   const [typingUsers, setTypingUsers] = useState<Map<string, string>>(
     new Map(),
   );
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const userIdRef = useRef(user?.id);
+
+  // Keep userIdRef up to date
+  useEffect(() => {
+    userIdRef.current = user?.id;
+  }, [user?.id]);
 
   // Join the chat room on the /chat namespace
   useEffect(() => {
@@ -84,6 +92,8 @@ export const useChat = (roomId: string): UseChatReturn => {
                         ...r.users,
                         { userId: payload.userId, userName: payload.userName },
                       ],
+                      hasReacted:
+                        r.hasReacted || payload.userId === userIdRef.current,
                     }
                   : r,
               ),
@@ -98,7 +108,7 @@ export const useChat = (roomId: string): UseChatReturn => {
                 emoji: payload.emoji,
                 count: 1,
                 users: [{ userId: payload.userId, userName: payload.userName }],
-                hasReacted: false,
+                hasReacted: payload.userId === userIdRef.current,
               },
             ],
           };
@@ -114,15 +124,23 @@ export const useChat = (roomId: string): UseChatReturn => {
           return {
             ...msg,
             reactions: msg.reactions
-              .map((r) =>
-                r.emoji === payload.emoji
-                  ? {
-                      ...r,
-                      count: r.count - 1,
-                      users: r.users.filter((u) => u.userId !== payload.userId),
-                    }
-                  : r,
-              )
+              .map((r) => {
+                if (r.emoji !== payload.emoji) return r;
+
+                const newUsers = r.users.filter(
+                  (u) => u.userId !== payload.userId,
+                );
+                const hasReacted = newUsers.some(
+                  (u) => u.userId === userIdRef.current,
+                );
+
+                return {
+                  ...r,
+                  count: r.count - 1,
+                  users: newUsers,
+                  hasReacted,
+                };
+              })
               .filter((r) => r.count > 0),
           };
         }),
