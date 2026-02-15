@@ -22,7 +22,14 @@ const mockPlaylistItem = {
 describe('PlaylistService', () => {
   let service: PlaylistService;
   let prisma: {
-    playlistItem: { findMany: jest.Mock; findFirst: jest.Mock; findUnique: jest.Mock; create: jest.Mock; update: jest.Mock; delete: jest.Mock };
+    playlistItem: {
+      findMany: jest.Mock;
+      findFirst: jest.Mock;
+      findUnique: jest.Mock;
+      create: jest.Mock;
+      update: jest.Mock;
+      delete: jest.Mock;
+    };
     $transaction: jest.Mock;
   };
 
@@ -63,9 +70,12 @@ describe('PlaylistService', () => {
   describe('addVideo', () => {
     it('should add video at next position', async () => {
       prisma.playlistItem.findFirst.mockResolvedValue({ position: 2 });
-      prisma.playlistItem.create.mockResolvedValue({ ...mockPlaylistItem, position: 3 });
+      prisma.playlistItem.create.mockResolvedValue({
+        ...mockPlaylistItem,
+        position: 3,
+      });
 
-      const result = await service.addVideo('room-1', 'user-1', {
+      await service.addVideo('room-1', 'user-1', {
         videoId: 'dQw4w9WgXcQ',
         title: 'Never Gonna Give You Up',
         duration: 212,
@@ -108,7 +118,10 @@ describe('PlaylistService', () => {
     });
 
     it('should throw ForbiddenException when MEMBER tries to remove others item', async () => {
-      prisma.playlistItem.findUnique.mockResolvedValue({ ...mockPlaylistItem, addedById: 'user-2' });
+      prisma.playlistItem.findUnique.mockResolvedValue({
+        ...mockPlaylistItem,
+        addedById: 'user-2',
+      });
 
       await expect(
         service.removeVideo('room-1', 'item-1', 'user-1', RoomRole.MEMBER),
@@ -116,7 +129,10 @@ describe('PlaylistService', () => {
     });
 
     it('should allow HOST to remove any item', async () => {
-      prisma.playlistItem.findUnique.mockResolvedValue({ ...mockPlaylistItem, addedById: 'user-2' });
+      prisma.playlistItem.findUnique.mockResolvedValue({
+        ...mockPlaylistItem,
+        addedById: 'user-2',
+      });
       prisma.playlistItem.delete.mockResolvedValue({});
       prisma.playlistItem.findMany.mockResolvedValue([]);
       prisma.$transaction.mockResolvedValue([]);
@@ -137,7 +153,11 @@ describe('PlaylistService', () => {
   describe('reorderPlaylist', () => {
     it('should throw ForbiddenException when MEMBER tries to reorder', async () => {
       await expect(
-        service.reorderPlaylist('room-1', [{ id: 'item-1', position: 1 }], RoomRole.MEMBER),
+        service.reorderPlaylist(
+          'room-1',
+          [{ id: 'item-1', position: 1 }],
+          RoomRole.MEMBER,
+        ),
       ).rejects.toThrow(ForbiddenException);
     });
 
@@ -145,7 +165,7 @@ describe('PlaylistService', () => {
       prisma.$transaction.mockResolvedValue([]);
       prisma.playlistItem.findMany.mockResolvedValue([mockPlaylistItem]);
 
-      const result = await service.reorderPlaylist(
+      await service.reorderPlaylist(
         'room-1',
         [{ id: 'item-1', position: 0 }],
         RoomRole.HOST,
@@ -156,7 +176,11 @@ describe('PlaylistService', () => {
 
   describe('getNextVideo', () => {
     it('should return next video by position', async () => {
-      prisma.playlistItem.findFirst.mockResolvedValue({ ...mockPlaylistItem, position: 1, addedBy: mockUser });
+      prisma.playlistItem.findFirst.mockResolvedValue({
+        ...mockPlaylistItem,
+        position: 1,
+        addedBy: mockUser,
+      });
 
       const result = await service.getNextVideo('room-1', 0);
       expect(result).not.toBeNull();

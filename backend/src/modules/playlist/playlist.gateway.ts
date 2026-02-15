@@ -7,7 +7,13 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
-import { Logger, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+import {
+  Logger,
+  UseGuards,
+  UseInterceptors,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { User, RoomRole } from '@prisma/client';
@@ -18,7 +24,9 @@ import { VideoSyncService } from '../video-sync/video-sync.service';
 import { WsJwtAuthGuard } from '../../common/guards/ws-jwt-auth.guard';
 import { WsCurrentUser } from '../../common/decorators/ws-current-user.decorator';
 import { extractTokenFromSocket } from '../../common/utils/ws.utils';
+import { WsLoggingInterceptor } from '../../common/interceptors/ws-logging.interceptor';
 
+@UseInterceptors(WsLoggingInterceptor)
 @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
 @WebSocketGateway({
   namespace: '/playlist',

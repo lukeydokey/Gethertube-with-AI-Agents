@@ -14,7 +14,7 @@ import { User } from '@prisma/client';
 export class WsLoggingInterceptor implements NestInterceptor {
   private readonly logger = new Logger('WebSocket');
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const client = context.switchToWs().getClient<Socket>();
     const data = context.switchToWs().getData();
     const event = context.getHandler().name;
@@ -64,10 +64,10 @@ export class WsLoggingInterceptor implements NestInterceptor {
     );
   }
 
-  private sanitizeData(data: any): any {
-    if (!data) return data;
+  private sanitizeData(data: unknown): unknown {
+    if (!data || typeof data !== 'object') return data;
 
-    const sanitized = { ...data };
+    const sanitized = { ...(data as Record<string, unknown>) };
     const sensitiveFields = ['password', 'token', 'secret', 'accessToken'];
 
     for (const field of sensitiveFields) {

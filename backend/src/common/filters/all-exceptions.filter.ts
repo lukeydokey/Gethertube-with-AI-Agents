@@ -27,7 +27,15 @@ export class AllExceptionsFilter implements ExceptionFilter {
         ? exception.message
         : 'Internal server error';
 
-    const errorResponse = {
+    const errorResponse: {
+      statusCode: number;
+      message: string;
+      timestamp: string;
+      path: string;
+      method: string;
+      correlationId: string | string[] | undefined;
+      stack?: string;
+    } = {
       statusCode: status,
       message,
       timestamp: new Date().toISOString(),
@@ -49,9 +57,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     // 프로덕션에서는 스택트레이스 숨김
     if (process.env.NODE_ENV === 'production') {
-      delete (errorResponse as any).stack;
+      delete errorResponse.stack;
     } else if (exception instanceof Error) {
-      (errorResponse as any).stack = exception.stack;
+      errorResponse.stack = exception.stack;
     }
 
     response.status(status).json(errorResponse);

@@ -7,7 +7,13 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
-import { Logger, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+import {
+  Logger,
+  UseGuards,
+  UseInterceptors,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { User, MessageType, RoomRole } from '@prisma/client';
@@ -17,7 +23,9 @@ import { ChatService } from './chat.service';
 import { WsJwtAuthGuard } from '../../common/guards/ws-jwt-auth.guard';
 import { WsCurrentUser } from '../../common/decorators/ws-current-user.decorator';
 import { extractTokenFromSocket } from '../../common/utils/ws.utils';
+import { WsLoggingInterceptor } from '../../common/interceptors/ws-logging.interceptor';
 
+@UseInterceptors(WsLoggingInterceptor)
 @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
 @WebSocketGateway({
   namespace: '/chat',

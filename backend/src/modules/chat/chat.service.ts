@@ -4,7 +4,7 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
-import { MessageType } from '@prisma/client';
+import { MessageType, Prisma } from '@prisma/client';
 import { PrismaService } from '../../database';
 import {
   MessageResponseDto,
@@ -104,7 +104,10 @@ export class ChatService {
       };
     } catch (error) {
       // Unique constraint 위반 시 기존 리액션 반환
-      if (error.code === 'P2002') {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
         const existing = await this.prisma.reaction.findFirst({
           where: { messageId, userId, emoji },
           include: { user: true },
