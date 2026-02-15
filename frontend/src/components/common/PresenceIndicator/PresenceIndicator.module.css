@@ -15,13 +15,13 @@
 }
 
 .online {
-  background-color: #22c55e;
+  background-color: var(--color-presence-online);
 }
 
 .away {
-  background-color: #eab308;
+  background-color: var(--color-presence-away);
 }
 
 .offline {
-  background-color: #9ca3af;
+  background-color: var(--color-presence-offline);
 }

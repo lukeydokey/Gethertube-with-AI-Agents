@@ -81,6 +81,12 @@ export const useChat = (roomId: string): UseChatReturn => {
           );
 
           if (existingReaction) {
+            // Prevent duplicate user addition (network retry/reconnection guard)
+            const userAlreadyReacted = existingReaction.users.some(
+              (u) => u.userId === payload.userId,
+            );
+            if (userAlreadyReacted) return msg;
+
             return {
               ...msg,
               reactions: msg.reactions.map((r) =>

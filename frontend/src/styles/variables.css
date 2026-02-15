@@ -32,6 +32,11 @@
   --color-info: #4285f4;
   --color-info-light: #e8f0fe;
 
+  /* Presence Colors */
+  --color-presence-online: #22c55e;
+  --color-presence-away: #eab308;
+  --color-presence-offline: #9ca3af;
+
   /* Border */
   --color-border: #e0e0e0;
   --color-border-light: #f0f0f0;
