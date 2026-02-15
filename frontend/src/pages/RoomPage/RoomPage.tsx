@@ -5,6 +5,7 @@ import { VideoPlayer } from '@/components/video/VideoPlayer';
 import { ChatBox } from '@/components/chat/ChatBox';
 import { PlaylistPanel } from '@/components/playlist/PlaylistPanel';
 import { Loading } from '@/components/common/Loading';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { useSocket } from '@/hooks/useSocket';
 import { useChat } from '@/hooks/useChat';
 import { useVideoSync } from '@/hooks/useVideoSync';
@@ -143,39 +144,45 @@ export const RoomPage: React.FC = () => {
   }
 
   return (
-    <RoomLayout roomName={room.name}>
-      <div className={styles.videoArea}>
-        <VideoPlayer
-          videoState={videoSync.videoState}
-          onPlay={(time) => videoSync.play(time)}
-          onPause={(time) => videoSync.pause(time)}
-          onSeek={(time) => videoSync.seek(time)}
-        />
-        <div className={styles.playlistArea}>
-          <PlaylistPanel
-            playlist={playlist.playlist}
-            currentVideoId={videoSync.videoState?.videoId ?? null}
-            onAddVideo={playlist.addVideo}
-            onRemoveVideo={playlist.removeVideo}
-            onPlayNext={playlist.playNext}
-            onPlayPrevious={playlist.playPrevious}
+    <ErrorBoundary>
+      <RoomLayout roomName={room.name}>
+        <div className={styles.videoArea}>
+          <VideoPlayer
+            videoState={videoSync.videoState}
+            onPlay={(time) => videoSync.play(time)}
+            onPause={(time) => videoSync.pause(time)}
+            onSeek={(time) => videoSync.seek(time)}
+          />
+          <div className={styles.playlistArea}>
+            <PlaylistPanel
+              playlist={playlist.playlist}
+              currentVideoId={videoSync.videoState?.videoId ?? null}
+              onAddVideo={playlist.addVideo}
+              onRemoveVideo={playlist.removeVideo}
+              onPlayNext={playlist.playNext}
+              onPlayPrevious={playlist.playPrevious}
+            />
+          </div>
+        </div>
+
+        <div className={styles.sidebar}>
+          <div className={styles.memberInfo}>
+            <span className={styles.memberCount}>
+              {members.length}명 참여 중
+            </span>
+          </div>
+          <ChatBox
+            messages={chat.messages}
+            typingUsers={chat.typingUsers}
+            onSendMessage={chat.sendMessage}
+            onTypingStart={chat.startTyping}
+            onTypingStop={chat.stopTyping}
+            onAddReaction={chat.addReaction}
+            onRemoveReaction={chat.removeReaction}
           />
         </div>
-      </div>
-
-      <div className={styles.sidebar}>
-        <div className={styles.memberInfo}>
-          <span className={styles.memberCount}>{members.length}명 참여 중</span>
-        </div>
-        <ChatBox
-          messages={chat.messages}
-          typingUsers={chat.typingUsers}
-          onSendMessage={chat.sendMessage}
-          onTypingStart={chat.startTyping}
-          onTypingStop={chat.stopTyping}
-        />
-      </div>
-    </RoomLayout>
+      </RoomLayout>
+    </ErrorBoundary>
   );
 };
 

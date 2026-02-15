@@ -4,6 +4,22 @@
 export type MessageType = 'TEXT' | 'SYSTEM' | 'EMOJI';
 
 /**
+ * Available reaction emojis
+ */
+export const REACTION_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🔥'] as const;
+export type ReactionEmoji = (typeof REACTION_EMOJIS)[number];
+
+/**
+ * Reaction group for a message
+ */
+export interface ReactionGroup {
+  emoji: string;
+  count: number;
+  users: Array<{ userId: string; userName: string }>;
+  hasReacted: boolean;
+}
+
+/**
  * Chat message response
  */
 export interface MessageResponse {
@@ -15,6 +31,7 @@ export interface MessageResponse {
   content: string;
   type: MessageType;
   createdAt: string;
+  reactions: ReactionGroup[];
 }
 
 /**
@@ -39,4 +56,41 @@ export interface TypingPayload {
 export interface UserTypingEvent {
   userId: string;
   userName: string;
+}
+
+/**
+ * Add reaction payload (Client -> Server)
+ */
+export interface AddReactionPayload {
+  roomId: string;
+  messageId: string;
+  emoji: ReactionEmoji;
+}
+
+/**
+ * Remove reaction payload (Client -> Server)
+ */
+export interface RemoveReactionPayload {
+  roomId: string;
+  messageId: string;
+  emoji: ReactionEmoji;
+}
+
+/**
+ * Reaction added event (Server -> Client)
+ */
+export interface ReactionAddedEvent {
+  messageId: string;
+  userId: string;
+  userName: string;
+  emoji: string;
+}
+
+/**
+ * Reaction removed event (Server -> Client)
+ */
+export interface ReactionRemovedEvent {
+  messageId: string;
+  userId: string;
+  emoji: string;
 }

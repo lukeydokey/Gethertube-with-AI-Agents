@@ -9,14 +9,21 @@
   flex-direction: row-reverse;
 }
 
-.bubble {
+.bubbleContainer {
   display: flex;
   flex-direction: column;
   gap: 2px;
   max-width: 80%;
 }
 
-.own .bubble {
+.bubble {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.own .bubbleContainer {
   align-items: flex-end;
 }
 
@@ -52,4 +59,28 @@
   font-size: var(--font-size-xs);
   color: var(--color-text-light);
   font-style: italic;
+}
+
+.reactionButton {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  z-index: 10;
+}
+
+.reactionButton:hover {
+  transform: scale(1.1);
+  border-color: var(--color-border-focus);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }

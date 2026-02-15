@@ -7,7 +7,7 @@ import React, {
 } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { ChatMessage } from '@/components/chat/ChatMessage';
-import type { MessageResponse } from '@/types/chat.types';
+import type { MessageResponse, ReactionEmoji } from '@/types/chat.types';
 import styles from './ChatBox.module.css';
 
 interface ChatBoxProps {
@@ -16,6 +16,8 @@ interface ChatBoxProps {
   onSendMessage: (content: string) => void;
   onTypingStart: () => void;
   onTypingStop: () => void;
+  onAddReaction: (messageId: string, emoji: ReactionEmoji) => void;
+  onRemoveReaction: (messageId: string, emoji: ReactionEmoji) => void;
 }
 
 export const ChatBox: React.FC<ChatBoxProps> = ({
@@ -24,6 +26,8 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   onSendMessage,
   onTypingStart,
   onTypingStop,
+  onAddReaction,
+  onRemoveReaction,
 }) => {
   const { user } = useAuth();
   const [input, setInput] = useState('');
@@ -88,6 +92,8 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
             key={msg.id}
             message={msg}
             isOwn={msg.userId === user?.id}
+            onAddReaction={onAddReaction}
+            onRemoveReaction={onRemoveReaction}
           />
         ))}
         <div ref={messagesEndRef} />
