@@ -4,12 +4,14 @@ import { RoomLayout } from '@/components/layout/RoomLayout';
 import { VideoPlayer } from '@/components/video/VideoPlayer';
 import { ChatBox } from '@/components/chat/ChatBox';
 import { PlaylistPanel } from '@/components/playlist/PlaylistPanel';
+import { MemberList } from '@/components/room/MemberList';
 import { Loading } from '@/components/common/Loading';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { useSocket } from '@/hooks/useSocket';
 import { useChat } from '@/hooks/useChat';
 import { useVideoSync } from '@/hooks/useVideoSync';
 import { usePlaylist } from '@/hooks/usePlaylist';
+import { usePresence } from '@/hooks/usePresence';
 import { useToast } from '@/hooks/useToast';
 import { roomService } from '@/services/room.service';
 import type { RoomResponse, MemberResponse } from '@/types/room.types';
@@ -29,6 +31,7 @@ export const RoomPage: React.FC = () => {
   const chat = useChat(roomId || '');
   const videoSync = useVideoSync(roomId || '');
   const playlist = usePlaylist(roomId || '');
+  const presence = usePresence(roomId || '');
 
   // Fetch room data via REST
   const fetchRoom = useCallback(async () => {
@@ -166,11 +169,7 @@ export const RoomPage: React.FC = () => {
         </div>
 
         <div className={styles.sidebar}>
-          <div className={styles.memberInfo}>
-            <span className={styles.memberCount}>
-              {members.length}명 참여 중
-            </span>
-          </div>
+          <MemberList members={members} presenceMap={presence.presenceMap} />
           <ChatBox
             messages={chat.messages}
             typingUsers={chat.typingUsers}

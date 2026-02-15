@@ -4,6 +4,21 @@
 export type RoomRole = 'HOST' | 'MODERATOR' | 'MEMBER';
 
 /**
+ * User presence status
+ */
+export type PresenceStatus = 'online' | 'away' | 'offline';
+
+/**
+ * User presence information
+ */
+export interface UserPresence {
+  userId: string;
+  userName: string;
+  profileImage: string | null;
+  status: PresenceStatus;
+}
+
+/**
  * Room response from backend API
  */
 export interface RoomResponse {
