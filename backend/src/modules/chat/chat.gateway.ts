@@ -24,6 +24,8 @@ import { WsJwtAuthGuard } from '../../common/guards/ws-jwt-auth.guard';
 import { WsCurrentUser } from '../../common/decorators/ws-current-user.decorator';
 import { extractTokenFromSocket } from '../../common/utils/ws.utils';
 import { WsLoggingInterceptor } from '../../common/interceptors/ws-logging.interceptor';
+import { AddReactionDto } from './dto/add-reaction.dto';
+import { RemoveReactionDto } from './dto/remove-reaction.dto';
 
 @UseInterceptors(WsLoggingInterceptor)
 @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
@@ -185,7 +187,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @UseGuards(WsJwtAuthGuard)
   async handleAddReaction(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { roomId: string; messageId: string; emoji: string },
+    @MessageBody() data: AddReactionDto,
     @WsCurrentUser() user: User,
   ) {
     try {
@@ -221,7 +223,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @UseGuards(WsJwtAuthGuard)
   async handleRemoveReaction(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { roomId: string; messageId: string; emoji: string },
+    @MessageBody() data: RemoveReactionDto,
     @WsCurrentUser() user: User,
   ) {
     try {

@@ -1,4 +1,5 @@
-import { IsString } from 'class-validator';
+import { IsString, IsIn } from 'class-validator';
+import { ALLOWED_REACTIONS } from '../constants';
 
 export class AddReactionDto {
   @IsString()
@@ -8,5 +9,8 @@ export class AddReactionDto {
   messageId: string;
 
   @IsString()
+  @IsIn(ALLOWED_REACTIONS, {
+    message: `emoji must be one of: ${ALLOWED_REACTIONS.join(', ')}`,
+  })
   emoji: string;
 }

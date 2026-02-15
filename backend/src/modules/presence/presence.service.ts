@@ -1,4 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleInit,
+  OnModuleDestroy,
+} from '@nestjs/common';
 import { User } from '@prisma/client';
 import {
   PresenceStatus,
@@ -7,9 +12,51 @@ import {
 } from './dto/presence-status.dto';
 
 @Injectable()
-export class PresenceService {
+export class PresenceService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PresenceService.name);
   private readonly presenceMap = new Map<string, UserPresence>();
+  private cleanupInterval?: NodeJS.Timeout;
+  private readonly STALE_THRESHOLD_MS = 90 * 1000; // 90초
+  private readonly CLEANUP_INTERVAL_MS = 60 * 1000; // 60초마다 정리
+
+  onModuleInit() {
+    this.logger.log('Starting presence cleanup interval');
+    this.cleanupInterval = setInterval(() => {
+      this.cleanupStalePresences();
+    }, this.CLEANUP_INTERVAL_MS);
+  }
+
+  onModuleDestroy() {
+    if (this.cleanupInterval) {
+      this.logger.log('Stopping presence cleanup interval');
+      clearInterval(this.cleanupInterval);
+    }
+  }
+
+  /**
+   * 오래된 presence 엔트리 정리
+   */
+  private cleanupStalePresences(): void {
+    const now = Date.now();
+    let cleanedCount = 0;
+
+    for (const [key, presence] of this.presenceMap.entries()) {
+      const lastSeenTime = presence.lastSeen.getTime();
+      const elapsedMs = now - lastSeenTime;
+
+      if (elapsedMs > this.STALE_THRESHOLD_MS) {
+        this.presenceMap.delete(key);
+        cleanedCount++;
+        this.logger.log(
+          `Cleaned stale presence for user ${presence.userId} in room ${presence.roomId} (stale for ${Math.floor(elapsedMs / 1000)}s)`,
+        );
+      }
+    }
+
+    if (cleanedCount > 0) {
+      this.logger.log(`Cleaned ${cleanedCount} stale presence entries`);
+    }
+  }
 
   /**
    * 유저를 온라인 상태로 설정
