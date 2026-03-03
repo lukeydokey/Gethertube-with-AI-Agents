@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "build": "nest build",
+    "prestart:dev": "pnpm run prisma:generate",
     "start": "nest start --watch",
     "start:dev": "cross-env NODE_ENV=local nest start --watch",
     "start:debug": "nest start --debug --watch",
@@ -13,7 +14,9 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "dev": "pnpm run start:dev",
+    "prisma:generate": "prisma generate --schema prisma/schema.prisma"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.6",
