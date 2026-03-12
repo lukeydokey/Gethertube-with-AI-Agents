@@ -91,6 +91,9 @@ export class PlaylistGateway
       return;
     }
     client.join(data.roomId);
+
+    const playlist = await this.playlistService.getPlaylist(data.roomId);
+    client.emit('playlist_updated', { playlist });
   }
 
   @SubscribeMessage('add_video')
