@@ -33,7 +33,7 @@ export interface RoomResponse {
     name: string;
     profileImage: string | null;
   };
-  videoState: VideoStateResponse | null;
+  videoState?: VideoStateResponse | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -97,7 +97,6 @@ export interface JoinRoomRequest {
  * Paginated API response
  */
 export interface PaginatedResponse<T> {
-  success: true;
   data: T[];
   meta?: {
     pagination?: {
@@ -113,6 +112,5 @@ export interface PaginatedResponse<T> {
  * Single item API response
  */
 export interface ApiResponse<T> {
-  success: true;
   data: T;
 }
