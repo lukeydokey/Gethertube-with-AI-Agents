@@ -270,6 +270,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return;
     }
     client.join(data.roomId);
+
+    const messages = await this.chatService.getMessages(data.roomId);
+    client.emit('chat_history', { messages });
   }
 
   private clearTyping(roomId: string, user: User) {
