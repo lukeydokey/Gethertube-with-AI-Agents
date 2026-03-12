@@ -11,12 +11,35 @@
     "build:frontend": "pnpm --filter frontend build",
     "build:backend": "pnpm --filter backend build",
     "test": "pnpm -r run test",
+    "test:backend:ci": "pnpm --filter backend test -- --runInBand",
+    "test:frontend:ci": "cross-env CI=true pnpm --filter frontend test -- --watchAll=false --runInBand --forceExit",
+    "test:ci": "pnpm run test:backend:ci && pnpm run test:frontend:ci",
     "lint": "pnpm -r run lint",
+    "security:audit": "pnpm audit --audit-level=high",
+    "loadtest:backend": "autocannon -c 20 -d 10 -p 5 http://localhost:3001/",
     "clean": "pnpm -r run clean && rimraf node_modules"
+  },
+  "devDependencies": {
+    "autocannon": "^8.0.0",
+    "cross-env": "10.1.0"
   },
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
   },
-  "packageManager": "pnpm@9.15.0"
+  "packageManager": "pnpm@9.15.0",
+  "pnpm": {
+    "overrides": {
+      "axios": "1.13.5",
+      "glob@>=10.2.0 <10.5.0": "10.5.0",
+      "minimatch@<3.1.4": "3.1.4",
+      "minimatch@>=5.0.0 <5.1.8": "5.1.8",
+      "minimatch@>=9.0.0 <9.0.7": "9.0.7",
+      "multer@<2.1.1": "2.1.1",
+      "nth-check": "2.0.1",
+      "rollup@<2.80.0": "2.80.0",
+      "svgo@>=2.1.0 <2.8.1": "2.8.1",
+      "underscore": "1.13.8"
+    }
+  }
 }
