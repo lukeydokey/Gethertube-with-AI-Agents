@@ -17,6 +17,7 @@ module.exports = {
     configure: {
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/src/$1',
+        '^.+\\.module\\.(css|sass|scss)$': 'identity-obj-proxy',
       },
       transformIgnorePatterns: [
         'node_modules/(?!(axios)/)',
