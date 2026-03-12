@@ -30,7 +30,7 @@ export const useVideoSync = (roomId: string): UseVideoSyncReturn => {
       setVideoState(payload.videoState);
     };
 
-    const handleSyncResponse = (payload: { videoState: VideoStateResponse }) => {
+    const handleSyncResponse = (payload: { videoState: VideoStateResponse | null }) => {
       setVideoState(payload.videoState);
     };
 

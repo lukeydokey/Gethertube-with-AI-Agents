@@ -34,18 +34,15 @@ export const useChat = (roomId: string): UseChatReturn => {
     userIdRef.current = user?.id;
   }, [user?.id]);
 
-  // Join the chat room on the /chat namespace
   useEffect(() => {
     if (!chatSocket || !roomId) return;
 
-    chatSocket.emit('join_chat_room', { roomId });
-  }, [chatSocket, roomId]);
-
-  useEffect(() => {
-    if (!chatSocket) return;
-
     const handleNewMessage = (payload: { message: MessageResponse }) => {
       setMessages((prev) => [...prev, payload.message]);
+    };
+
+    const handleChatHistory = (payload: { messages: MessageResponse[] }) => {
+      setMessages(payload.messages);
     };
 
     const handleUserTyping = (payload: {
@@ -154,21 +151,24 @@ export const useChat = (roomId: string): UseChatReturn => {
     };
 
     chatSocket.on('new_message', handleNewMessage);
+    chatSocket.on('chat_history', handleChatHistory);
     chatSocket.on('user_typing', handleUserTyping);
     chatSocket.on('user_stopped_typing', handleUserStoppedTyping);
     chatSocket.on('message_deleted', handleMessageDeleted);
     chatSocket.on('reaction_added', handleReactionAdded);
     chatSocket.on('reaction_removed', handleReactionRemoved);
+    chatSocket.emit('join_chat_room', { roomId });
 
     return () => {
       chatSocket.off('new_message', handleNewMessage);
+      chatSocket.off('chat_history', handleChatHistory);
       chatSocket.off('user_typing', handleUserTyping);
       chatSocket.off('user_stopped_typing', handleUserStoppedTyping);
       chatSocket.off('message_deleted', handleMessageDeleted);
       chatSocket.off('reaction_added', handleReactionAdded);
       chatSocket.off('reaction_removed', handleReactionRemoved);
     };
-  }, [chatSocket]);
+  }, [chatSocket, roomId]);
 
   const sendMessage = useCallback(
     (content: string, type?: MessageType) => {

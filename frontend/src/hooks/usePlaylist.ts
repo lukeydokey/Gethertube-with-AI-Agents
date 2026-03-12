@@ -22,15 +22,8 @@ export const usePlaylist = (roomId: string): UsePlaylistReturn => {
   const { playlistSocket } = useSocket();
   const [playlist, setPlaylist] = useState<PlaylistItemResponse[]>([]);
 
-  // Join the playlist room on the /playlist namespace
   useEffect(() => {
     if (!playlistSocket || !roomId) return;
-
-    playlistSocket.emit('join_playlist_room', { roomId });
-  }, [playlistSocket, roomId]);
-
-  useEffect(() => {
-    if (!playlistSocket) return;
 
     const handlePlaylistUpdated = (payload: { playlist: PlaylistItemResponse[] }) => {
       setPlaylist(payload.playlist);
@@ -47,13 +40,14 @@ export const usePlaylist = (roomId: string): UsePlaylistReturn => {
     playlistSocket.on('playlist_updated', handlePlaylistUpdated);
     playlistSocket.on('video_added', handleVideoAdded);
     playlistSocket.on('video_removed', handleVideoRemoved);
+    playlistSocket.emit('join_playlist_room', { roomId });
 
     return () => {
       playlistSocket.off('playlist_updated', handlePlaylistUpdated);
       playlistSocket.off('video_added', handleVideoAdded);
       playlistSocket.off('video_removed', handleVideoRemoved);
     };
-  }, [playlistSocket]);
+  }, [playlistSocket, roomId]);
 
   const addVideo = useCallback(
     (params: AddVideoParams) => {
