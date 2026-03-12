@@ -7,7 +7,7 @@
     "stop:dev-ports": "kill-port 3000 3001",
     "stop:frontend-port": "kill-port 3000",
     "stop:backend-port": "kill-port 3001",
-    "dev": "pnpm run stop:dev-ports && pnpm -r --parallel run dev",
+    "dev": "node scripts/dev-runner.cjs",
     "dev:frontend": "pnpm run stop:frontend-port && pnpm --filter frontend dev",
     "dev:backend": "pnpm run stop:backend-port && pnpm --filter backend start:dev",
     "build": "pnpm -r run build",
