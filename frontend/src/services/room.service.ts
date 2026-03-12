@@ -1,5 +1,6 @@
 import api from './api';
 import type {
+  PaginatedResponse,
   RoomResponse,
   CreateRoomRequest,
   JoinRoomRequest,
@@ -14,8 +15,8 @@ export const roomService = {
    * List public rooms
    */
   async listRooms(): Promise<RoomResponse[]> {
-    const response = await api.get<RoomResponse[]>('/rooms');
-    return response.data;
+    const response = await api.get<PaginatedResponse<RoomResponse>>('/rooms');
+    return response.data.data;
   },
 
   /**

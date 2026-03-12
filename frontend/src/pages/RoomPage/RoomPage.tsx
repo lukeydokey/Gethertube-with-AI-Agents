@@ -22,25 +22,30 @@ export const RoomPage: React.FC = () => {
   const navigate = useNavigate();
   const { roomsSocket, isConnected } = useSocket();
   const { showToast } = useToast();
+  const [joinedRoomId, setJoinedRoomId] = useState('');
 
   const [room, setRoom] = useState<RoomResponse | null>(null);
   const [members, setMembers] = useState<MemberResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const chat = useChat(roomId || '');
-  const videoSync = useVideoSync(roomId || '');
-  const playlist = usePlaylist(roomId || '');
-  const presence = usePresence(roomId || '');
+  const chat = useChat(joinedRoomId);
+  const videoSync = useVideoSync(joinedRoomId);
+  const playlist = usePlaylist(joinedRoomId);
+  const presence = usePresence(joinedRoomId);
+  const { requestSync } = videoSync;
 
   // Fetch room data via REST
   const fetchRoom = useCallback(async () => {
     if (!roomId) return;
 
     try {
+      await roomService.joinRoom(roomId);
       const roomData = await roomService.getRoom(roomId);
       setRoom(roomData);
+      setJoinedRoomId(roomId);
     } catch {
+      setJoinedRoomId('');
       setError('방을 찾을 수 없습니다.');
     } finally {
       setLoading(false);
@@ -98,9 +103,10 @@ export const RoomPage: React.FC = () => {
   );
 
   useEffect(() => {
-    if (!roomsSocket || !isConnected || !roomId) return;
+    if (!roomsSocket || !isConnected || !joinedRoomId) return;
 
-    roomsSocket.emit('join_room', { roomId });
+    roomsSocket.emit('join_room', { roomId: joinedRoomId });
+    requestSync();
 
     roomsSocket.on('room_joined', handleRoomJoined);
     roomsSocket.on('member_joined', handleMemberJoined);
@@ -109,7 +115,7 @@ export const RoomPage: React.FC = () => {
     roomsSocket.on('error', handleError);
 
     return () => {
-      roomsSocket.emit('leave_room', { roomId });
+      roomsSocket.emit('leave_room', { roomId: joinedRoomId });
       roomsSocket.off('room_joined', handleRoomJoined);
       roomsSocket.off('member_joined', handleMemberJoined);
       roomsSocket.off('member_left', handleMemberLeft);
@@ -119,12 +125,13 @@ export const RoomPage: React.FC = () => {
   }, [
     roomsSocket,
     isConnected,
-    roomId,
+    joinedRoomId,
     handleRoomJoined,
     handleMemberJoined,
     handleMemberLeft,
     handleRoomClosed,
     handleError,
+    requestSync,
   ]);
 
   if (loading) {

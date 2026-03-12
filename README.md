@@ -74,7 +74,7 @@ cp backend/.env.example backend/.env
 |------|------|--------|
 | `PORT` | 백엔드 서버 포트 | `3001` |
 | `NODE_ENV` | 실행 환경 | `development` |
-| `DATABASE_URL` | PostgreSQL 접속 URL | `postgresql://gethertube:gethertube123@localhost:5432/gethertube` |
+| `DATABASE_URL` | PostgreSQL 접속 URL | `postgresql://gethertube:gethertube123@localhost:15432/gethertube` |
 | `REDIS_URL` | Redis 접속 URL | `redis://localhost:6379` |
 | `JWT_SECRET` | JWT 서명 키 (임의 문자열) | 직접 설정 필요 |
 | `JWT_EXPIRES_IN` | JWT 만료 시간 | `7d` |
@@ -122,6 +122,7 @@ docker compose ps
 
 ```bash
 cd backend
+pnpm prisma:generate
 npx prisma migrate dev
 ```
 
@@ -159,6 +160,12 @@ pnpm dev:backend
 
 ```bash
 pnpm test
+```
+
+CI와 동일한 방식으로 실행하려면:
+
+```bash
+pnpm test:ci
 ```
 
 ### Backend 테스트
@@ -205,6 +212,36 @@ pnpm build
 # 개별 빌드
 pnpm build:frontend
 pnpm build:backend
+```
+
+---
+
+## Production Readiness
+
+### CI
+
+GitHub Actions CI는 `.github/workflows/ci.yml`에 정의되어 있습니다. 설치 후 아래 검증을 수행합니다.
+
+```bash
+pnpm build
+pnpm test:backend:ci
+pnpm test:frontend:ci
+```
+
+### 보안 점검
+
+```bash
+pnpm security:audit
+```
+
+현재 감사 결과에서 직접 의존성인 `axios`는 패치 버전으로 고정했습니다. 남아 있는 high 이슈는 주로 `react-scripts`/`@craco/craco`와 Nest CLI 하위 의존성에 걸린 전이 의존성으로, 상세 내용은 `docs/security-audit.md`에 정리했습니다.
+
+### 로드 테스트
+
+백엔드가 실행 중일 때 health endpoint 기준으로 간단한 부하 테스트를 돌릴 수 있습니다.
+
+```bash
+pnpm loadtest:backend
 ```
 
 ---

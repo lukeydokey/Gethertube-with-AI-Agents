@@ -150,7 +150,14 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @WsCurrentUser() user: User,
   ) {
     try {
-      await this.roomsService.leaveRoom(data.roomId, user.id);
+      const isMember = await this.roomsService.isMember(data.roomId, user.id);
+      if (!isMember) {
+        client.emit('error', {
+          code: 'ROOM_LEAVE_ERROR',
+          message: 'Not a room member',
+        });
+        return;
+      }
 
       // 프레즌스 오프라인 설정
       const presence = this.presenceService.setOffline(data.roomId, user.id);

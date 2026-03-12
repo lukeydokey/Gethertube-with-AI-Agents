@@ -7,7 +7,7 @@ jest.mock('@/services/api', () => ({
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ProtectedRoute } from './ProtectedRoute';
 import { AuthContext } from '@/store/AuthContext';
 import type { AuthContextValue } from '@/types/auth.types';
@@ -29,11 +29,12 @@ const createMockContext = (
 
 const renderWithProviders = (
   ui: React.ReactElement,
-  contextValue: AuthContextValue
+  contextValue: AuthContextValue,
+  initialEntries: string[] = ['/']
 ) => {
   return render(
     <AuthContext.Provider value={contextValue}>
-      <MemoryRouter>{ui}</MemoryRouter>
+      <MemoryRouter initialEntries={initialEntries}>{ui}</MemoryRouter>
     </AuthContext.Provider>
   );
 };
@@ -81,14 +82,23 @@ describe('ProtectedRoute', () => {
       isLoading: false,
     });
 
-    const { container } = renderWithProviders(
-      <ProtectedRoute>
-        <div>Protected Content</div>
-      </ProtectedRoute>,
-      mockContext
+    renderWithProviders(
+      <Routes>
+        <Route
+          path="/protected"
+          element={
+            <ProtectedRoute>
+              <div>Protected Content</div>
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/login" element={<div>Login Page</div>} />
+      </Routes>,
+      mockContext,
+      ['/protected']
     );
 
-    // Navigate component renders, content is not shown
-    expect(container.querySelector('div')?.textContent).not.toContain('Protected Content');
+    expect(screen.queryByText('Protected Content')).not.toBeInTheDocument();
+    expect(screen.getByText('Login Page')).toBeInTheDocument();
   });
 });
