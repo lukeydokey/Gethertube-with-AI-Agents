@@ -4,9 +4,12 @@
   "private": true,
   "description": "Gethertube - Monorepo Project",
   "scripts": {
-    "dev": "pnpm -r --parallel run dev",
-    "dev:frontend": "pnpm --filter frontend dev",
-    "dev:backend": "pnpm --filter backend start:dev",
+    "stop:dev-ports": "kill-port 3000 3001",
+    "stop:frontend-port": "kill-port 3000",
+    "stop:backend-port": "kill-port 3001",
+    "dev": "pnpm run stop:dev-ports && pnpm -r --parallel run dev",
+    "dev:frontend": "pnpm run stop:frontend-port && pnpm --filter frontend dev",
+    "dev:backend": "pnpm run stop:backend-port && pnpm --filter backend start:dev",
     "build": "pnpm -r run build",
     "build:frontend": "pnpm --filter frontend build",
     "build:backend": "pnpm --filter backend build",
@@ -21,7 +24,8 @@
   },
   "devDependencies": {
     "autocannon": "^8.0.0",
-    "cross-env": "10.1.0"
+    "cross-env": "10.1.0",
+    "kill-port": "^2.0.1"
   },
   "engines": {
     "node": ">=18.0.0",
