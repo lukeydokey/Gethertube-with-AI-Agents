@@ -104,10 +104,7 @@ export class ChatService {
       };
     } catch (error) {
       // Unique constraint 위반 시 기존 리액션 반환
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2002'
-      ) {
+      if (this.isUniqueConstraintError(error)) {
         const existing = await this.prisma.reaction.findFirst({
           where: { messageId, userId, emoji },
           include: { user: true },
@@ -122,6 +119,16 @@ export class ChatService {
       }
       throw error;
     }
+  }
+
+  private isUniqueConstraintError(error: unknown): error is Prisma.PrismaClientKnownRequestError | { code: string } {
+    return (
+      error instanceof Prisma.PrismaClientKnownRequestError ||
+      (typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        (error as { code?: unknown }).code === 'P2002')
+    );
   }
 
   async removeReaction(
