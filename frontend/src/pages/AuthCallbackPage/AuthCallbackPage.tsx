@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import styles from './AuthCallbackPage.module.css';
@@ -13,12 +13,20 @@ export const AuthCallbackPage: React.FC = () => {
   const { setAuthFromCallback, error } = useAuth();
   const hasProcessed = useRef(false);
 
+  const callbackParams = useMemo(() => {
+    const hashParams = new URLSearchParams(window.location.hash.slice(1));
+
+    return {
+      token: searchParams.get('token') ?? hashParams.get('token'),
+      errorParam: searchParams.get('error') ?? hashParams.get('error'),
+    };
+  }, [searchParams]);
+
   useEffect(() => {
     if (hasProcessed.current) return;
     hasProcessed.current = true;
 
-    const token = searchParams.get('token');
-    const errorParam = searchParams.get('error');
+    const { token, errorParam } = callbackParams;
 
     // Remove token from URL immediately for security
     if (token || errorParam) {
@@ -51,7 +59,7 @@ export const AuthCallbackPage: React.FC = () => {
           replace: true,
         });
       });
-  }, [searchParams, navigate, setAuthFromCallback]);
+  }, [callbackParams, navigate, setAuthFromCallback]);
 
   if (error) {
     return (
