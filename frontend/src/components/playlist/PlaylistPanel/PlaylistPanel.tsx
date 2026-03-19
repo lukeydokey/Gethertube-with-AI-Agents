@@ -15,8 +15,11 @@ interface AddVideoParams {
 interface PlaylistPanelProps {
   playlist: PlaylistItemResponse[];
   currentVideoId: string | null;
+  canControlPlayback: boolean;
+  canManagePlaylist: boolean;
   onAddVideo: (params: AddVideoParams) => void;
   onRemoveVideo: (itemId: string) => void;
+  onPlayItem: (item: PlaylistItemResponse) => void;
   onPlayNext: () => void;
   onPlayPrevious: () => void;
 }
@@ -24,8 +27,11 @@ interface PlaylistPanelProps {
 export const PlaylistPanel: React.FC<PlaylistPanelProps> = ({
   playlist,
   currentVideoId,
+  canControlPlayback,
+  canManagePlaylist,
   onAddVideo,
   onRemoveVideo,
+  onPlayItem,
   onPlayNext,
   onPlayPrevious,
 }) => {
@@ -78,7 +84,7 @@ export const PlaylistPanel: React.FC<PlaylistPanelProps> = ({
             type="button"
             className={styles.controlButton}
             onClick={onPlayPrevious}
-            disabled={playlist.length === 0}
+            disabled={!canControlPlayback || playlist.length === 0}
             aria-label="이전"
           >
             &laquo;
@@ -87,7 +93,7 @@ export const PlaylistPanel: React.FC<PlaylistPanelProps> = ({
             type="button"
             className={styles.controlButton}
             onClick={onPlayNext}
-            disabled={playlist.length === 0}
+            disabled={!canControlPlayback || playlist.length === 0}
             aria-label="다음"
           >
             &raquo;
@@ -129,6 +135,9 @@ export const PlaylistPanel: React.FC<PlaylistPanelProps> = ({
             key={item.id}
             item={item}
             isPlaying={item.videoId === currentVideoId}
+            canPlay={canControlPlayback}
+            canRemove={canManagePlaylist}
+            onPlay={onPlayItem}
             onRemove={onRemoveVideo}
           />
         ))}

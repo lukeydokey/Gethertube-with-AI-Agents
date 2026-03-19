@@ -5,7 +5,7 @@ export const GlobalErrorPage: React.FC = () => {
   const handleGoHome = () => {
     // Use window.location instead of useNavigate() since this component
     // is rendered outside of BrowserRouter in App.tsx
-    window.location.href = '/';
+    window.location.href = '/rooms';
   };
 
   const handleReload = () => {

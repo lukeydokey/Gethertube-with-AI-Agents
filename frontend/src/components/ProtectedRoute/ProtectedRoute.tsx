@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { buildInternalPath, saveReturnTo } from '@/utils/authRedirect';
 import styles from './ProtectedRoute.module.css';
 
 interface ProtectedRouteProps {
@@ -26,7 +27,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+    const returnTo = buildInternalPath(location);
+    saveReturnTo(returnTo);
+
+    return <Navigate to="/login" state={{ from: returnTo }} replace />;
   }
 
   return <>{children}</>;

@@ -111,8 +111,8 @@ export class PlaylistGateway
     @WsCurrentUser() user: User,
   ) {
     try {
-      const isMember = await this.roomsService.isMember(data.roomId, user.id);
-      if (!isMember) {
+      const role = await this.roomsService.getMemberRole(data.roomId, user.id);
+      if (!role) {
         client.emit('error', {
           code: 'PLAYLIST_ERROR',
           message: 'Not a room member',
@@ -128,6 +128,23 @@ export class PlaylistGateway
       });
 
       this.server.to(data.roomId).emit('video_added', { item });
+
+      const currentState = await this.videoSyncService.getVideoState(data.roomId);
+      const shouldAutoSelectFirstVideo =
+        role === RoomRole.HOST &&
+        item.position === 0 &&
+        (!currentState || !currentState.videoId);
+
+      if (shouldAutoSelectFirstVideo) {
+        const videoState = await this.videoSyncService.changeVideo(
+          data.roomId,
+          item.videoId,
+          item.title,
+          item.thumbnail ?? undefined,
+          false,
+        );
+        this.server.to(data.roomId).emit('video_state_changed', { videoState });
+      }
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Failed to add video';
@@ -207,14 +224,7 @@ export class PlaylistGateway
     @WsCurrentUser() user: User,
   ) {
     try {
-      const role = await this.roomsService.getMemberRole(data.roomId, user.id);
-      if (!role || role === RoomRole.MEMBER) {
-        client.emit('error', {
-          code: 'PLAYLIST_ERROR',
-          message: 'Only hosts and moderators can change video',
-        });
-        return;
-      }
+      if (!(await this.hasPlaybackControl(data.roomId, user.id, client))) return;
 
       const currentState = await this.videoSyncService.getVideoState(
         data.roomId,
@@ -233,6 +243,7 @@ export class PlaylistGateway
           next.videoId,
           next.title,
           next.thumbnail ?? undefined,
+          true,
         );
         this.server.to(data.roomId).emit('video_state_changed', { videoState });
       }
@@ -251,14 +262,7 @@ export class PlaylistGateway
     @WsCurrentUser() user: User,
   ) {
     try {
-      const role = await this.roomsService.getMemberRole(data.roomId, user.id);
-      if (!role || role === RoomRole.MEMBER) {
-        client.emit('error', {
-          code: 'PLAYLIST_ERROR',
-          message: 'Only hosts and moderators can change video',
-        });
-        return;
-      }
+      if (!(await this.hasPlaybackControl(data.roomId, user.id, client))) return;
 
       const currentState = await this.videoSyncService.getVideoState(
         data.roomId,
@@ -277,6 +281,7 @@ export class PlaylistGateway
           prev.videoId,
           prev.title,
           prev.thumbnail ?? undefined,
+          true,
         );
         this.server.to(data.roomId).emit('video_state_changed', { videoState });
       }
@@ -295,5 +300,30 @@ export class PlaylistGateway
     const playlist = await this.playlistService.getPlaylist(roomId);
     const item = playlist.find((i) => i.videoId === videoId);
     return item?.position ?? -1;
+  }
+
+  private async hasPlaybackControl(
+    roomId: string,
+    userId: string,
+    client: Socket,
+  ): Promise<boolean> {
+    const role = await this.roomsService.getMemberRole(roomId, userId);
+    if (!role) {
+      client.emit('error', {
+        code: 'PLAYLIST_ERROR',
+        message: 'Not a room member',
+      });
+      return false;
+    }
+
+    if (role !== RoomRole.HOST) {
+      client.emit('error', {
+        code: 'PLAYLIST_ERROR',
+        message: 'Only the host can change video',
+      });
+      return false;
+    }
+
+    return true;
   }
 }

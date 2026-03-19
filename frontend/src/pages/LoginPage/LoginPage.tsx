@@ -2,6 +2,12 @@ import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { GoogleLoginButton } from '@/components/GoogleLoginButton';
+import {
+  getDefaultReturnPath,
+  getReturnTo,
+  sanitizeInternalReturnTo,
+  saveReturnTo,
+} from '@/utils/authRedirect';
 import styles from './LoginPage.module.css';
 
 interface LocationState {
@@ -19,7 +25,16 @@ export const LoginPage: React.FC = () => {
 
   const locationState = location.state as LocationState | null;
   const errorMessage = locationState?.error || error;
-  const redirectTo = locationState?.from || '/';
+  const redirectTo =
+    sanitizeInternalReturnTo(locationState?.from) ||
+    getReturnTo() ||
+    getDefaultReturnPath();
+
+  useEffect(() => {
+    if (locationState?.from) {
+      saveReturnTo(locationState.from);
+    }
+  }, [locationState?.from]);
 
   // Redirect if already authenticated
   useEffect(() => {

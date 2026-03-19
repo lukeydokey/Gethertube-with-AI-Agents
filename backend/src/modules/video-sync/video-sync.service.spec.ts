@@ -21,6 +21,8 @@ describe('VideoSyncService', () => {
   };
 
   beforeEach(async () => {
+    jest.restoreAllMocks();
+
     prisma = {
       videoState: {
         findUnique: jest.fn(),
@@ -41,11 +43,46 @@ describe('VideoSyncService', () => {
   describe('getVideoState', () => {
     it('should return video state when exists', async () => {
       prisma.videoState.findUnique.mockResolvedValue(mockVideoState);
+      jest.spyOn(Date, 'now').mockReturnValue(mockVideoState.lastUpdated.getTime());
 
       const result = await service.getVideoState('room-1');
       expect(result).not.toBeNull();
       expect(result!.videoId).toBe('dQw4w9WgXcQ');
       expect(result!.currentTime).toBe(42.5);
+    });
+
+    it('should project current time forward while video is playing', async () => {
+      const lastUpdated = new Date('2026-03-19T12:00:00.000Z');
+
+      prisma.videoState.findUnique.mockResolvedValue({
+        ...mockVideoState,
+        currentTime: 10,
+        isPlaying: true,
+        playbackRate: 1.5,
+        lastUpdated,
+      });
+      jest.spyOn(Date, 'now').mockReturnValue(lastUpdated.getTime() + 4000);
+
+      const result = await service.getVideoState('room-1');
+
+      expect(result?.currentTime).toBe(16);
+    });
+
+    it('should keep current time unchanged when video is paused', async () => {
+      const lastUpdated = new Date('2026-03-19T12:00:00.000Z');
+
+      prisma.videoState.findUnique.mockResolvedValue({
+        ...mockVideoState,
+        currentTime: 10,
+        isPlaying: false,
+        playbackRate: 1.5,
+        lastUpdated,
+      });
+      jest.spyOn(Date, 'now').mockReturnValue(lastUpdated.getTime() + 4000);
+
+      const result = await service.getVideoState('room-1');
+
+      expect(result?.currentTime).toBe(10);
     });
 
     it('should return null when no state exists', async () => {

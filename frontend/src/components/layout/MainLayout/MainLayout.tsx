@@ -21,7 +21,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     <div className={styles.layout}>
       <header className={styles.header}>
         <div className={styles.headerContent}>
-          <Link to="/" className={styles.logo}>
+          <Link to="/rooms" className={styles.logo}>
             Gethertube
           </Link>
 

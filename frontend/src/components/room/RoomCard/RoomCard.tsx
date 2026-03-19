@@ -6,13 +6,14 @@ import styles from './RoomCard.module.css';
 
 interface RoomCardProps {
   room: RoomResponse;
+  to?: string;
 }
 
-export const RoomCard: React.FC<RoomCardProps> = React.memo(({ room }) => {
+export const RoomCard: React.FC<RoomCardProps> = React.memo(({ room, to }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate(`/rooms/${room.id}`);
+    navigate(to || `/rooms/${room.id}`);
   };
 
   return (

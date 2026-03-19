@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { consumeReturnTo, getDefaultReturnPath } from '@/utils/authRedirect';
 import styles from './AuthCallbackPage.module.css';
 
 /**
@@ -51,7 +52,7 @@ export const AuthCallbackPage: React.FC = () => {
 
     setAuthFromCallback(token)
       .then(() => {
-        navigate('/', { replace: true });
+        navigate(consumeReturnTo() || getDefaultReturnPath(), { replace: true });
       })
       .catch(() => {
         navigate('/login', {

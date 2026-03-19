@@ -34,12 +34,21 @@ const renderWithProviders = (
 ) => {
   return render(
     <AuthContext.Provider value={contextValue}>
-      <MemoryRouter initialEntries={initialEntries}>{ui}</MemoryRouter>
+      <MemoryRouter
+        initialEntries={initialEntries}
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
+        {ui}
+      </MemoryRouter>
     </AuthContext.Provider>
   );
 };
 
 describe('ProtectedRoute', () => {
+  beforeEach(() => {
+    sessionStorage.clear();
+  });
+
   it('should show loading spinner when isLoading is true', () => {
     const mockContext = createMockContext({ isLoading: true });
 
@@ -100,5 +109,34 @@ describe('ProtectedRoute', () => {
 
     expect(screen.queryByText('Protected Content')).not.toBeInTheDocument();
     expect(screen.getByText('Login Page')).toBeInTheDocument();
+    expect(sessionStorage.getItem('auth:returnTo')).toBe('/protected');
+  });
+
+  it('should preserve query string and hash in the saved return target', () => {
+    const mockContext = createMockContext({
+      isAuthenticated: false,
+      isLoading: false,
+    });
+
+    renderWithProviders(
+      <Routes>
+        <Route
+          path="/protected"
+          element={
+            <ProtectedRoute>
+              <div>Protected Content</div>
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/login" element={<div>Login Page</div>} />
+      </Routes>,
+      mockContext,
+      ['/protected?source=invite#details']
+    );
+
+    expect(screen.getByText('Login Page')).toBeInTheDocument();
+    expect(sessionStorage.getItem('auth:returnTo')).toBe(
+      '/protected?source=invite#details'
+    );
   });
 });
