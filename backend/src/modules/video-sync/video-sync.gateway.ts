@@ -89,6 +89,9 @@ export class VideoSyncGateway
       return;
     }
     client.join(data.roomId);
+
+    const videoState = await this.videoSyncService.getVideoState(data.roomId);
+    client.emit('sync_response', { videoState });
   }
 
   @SubscribeMessage('video_play')
@@ -157,17 +160,19 @@ export class VideoSyncGateway
       videoId: string;
       videoTitle?: string;
       videoThumbnail?: string;
+      autoPlay?: boolean;
     },
     @WsCurrentUser() user: User,
   ) {
     if (!(await this.hasVideoControl(data.roomId, user.id, client))) return;
 
     const state = await this.videoSyncService.changeVideo(
-      data.roomId,
-      data.videoId,
-      data.videoTitle,
-      data.videoThumbnail,
-    );
+        data.roomId,
+        data.videoId,
+        data.videoTitle,
+        data.videoThumbnail,
+        data.autoPlay,
+      );
     this.server
       .to(data.roomId)
       .emit('video_state_changed', { videoState: state });
@@ -201,7 +206,7 @@ export class VideoSyncGateway
       .emit('video_state_changed', { videoState: state });
   }
 
-  // HOST 또는 MODERATOR만 비디오 제어 가능 (ARCHITECTURE.md 8.3 Authorization Matrix)
+  // HOST만 비디오 제어 가능
   private async hasVideoControl(
     roomId: string,
     userId: string,
@@ -215,10 +220,10 @@ export class VideoSyncGateway
       });
       return false;
     }
-    if (role === RoomRole.MEMBER) {
+    if (role !== RoomRole.HOST) {
       client.emit('error', {
         code: 'VIDEO_ERROR',
-        message: 'Only hosts and moderators can control video',
+        message: 'Only the host can control video',
       });
       return false;
     }

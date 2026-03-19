@@ -10,9 +10,9 @@ import {
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { LoginPage } from '@/pages/LoginPage';
 import { AuthCallbackPage } from '@/pages/AuthCallbackPage';
-import { HomePage } from '@/pages/HomePage';
 import { RoomListPage } from '@/pages/RoomListPage';
 import { RoomCreatePage } from '@/pages/RoomCreatePage';
+import { RoomJoinPage } from '@/pages/RoomJoinPage';
 import { RoomPage } from '@/pages/RoomPage';
 
 function App() {
@@ -29,7 +29,7 @@ function App() {
                   path="/"
                   element={
                     <ProtectedRoute>
-                      <HomePage />
+                      <Navigate to="/rooms" replace />
                     </ProtectedRoute>
                   }
                 />
@@ -50,6 +50,14 @@ function App() {
                   }
                 />
                 <Route
+                  path="/rooms/:roomId/join"
+                  element={
+                    <ProtectedRoute>
+                      <RoomJoinPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/rooms/:roomId"
                   element={
                     <ProtectedRoute>
@@ -57,7 +65,7 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
-                <Route path="*" element={<Navigate to="/" replace />} />
+                <Route path="*" element={<Navigate to="/rooms" replace />} />
               </Routes>
             </SocketProvider>
           </ToastProvider>

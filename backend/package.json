@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
+    "prebuild": "pnpm run prisma:generate",
     "build": "nest build",
     "prestart:dev": "pnpm run prisma:generate",
     "start": "nest start --watch",

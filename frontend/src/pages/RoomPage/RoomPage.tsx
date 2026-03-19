@@ -13,6 +13,7 @@ import { useVideoSync } from '@/hooks/useVideoSync';
 import { usePlaylist } from '@/hooks/usePlaylist';
 import { usePresence } from '@/hooks/usePresence';
 import { useToast } from '@/hooks/useToast';
+import { useAuth } from '@/hooks/useAuth';
 import { roomService } from '@/services/room.service';
 import type { RoomResponse, MemberResponse } from '@/types/room.types';
 import styles from './RoomPage.module.css';
@@ -21,6 +22,7 @@ export const RoomPage: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const { roomsSocket, isConnected } = useSocket();
+  const { user } = useAuth();
   const { showToast } = useToast();
   const [joinedRoomId, setJoinedRoomId] = useState('');
 
@@ -28,21 +30,81 @@ export const RoomPage: React.FC = () => {
   const [members, setMembers] = useState<MemberResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [suppressHostPlaybackEvents, setSuppressHostPlaybackEvents] = useState(false);
+  const [hostResyncRequestedAt, setHostResyncRequestedAt] = useState(0);
 
   const chat = useChat(joinedRoomId);
   const videoSync = useVideoSync(joinedRoomId);
   const playlist = usePlaylist(joinedRoomId);
   const presence = usePresence(joinedRoomId);
-  const { requestSync } = videoSync;
+  const currentMember = members.find((member) => member.userId === user?.id) ?? null;
+  const canControlPlayback = currentMember?.role === 'HOST';
+  const canManagePlaylist = currentMember?.role === 'HOST';
+
+  useEffect(() => {
+    if (!canControlPlayback || !joinedRoomId) {
+      setSuppressHostPlaybackEvents(false);
+      setHostResyncRequestedAt(0);
+      return;
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setSuppressHostPlaybackEvents(true);
+        return;
+      }
+
+      const requestedAt = Date.now();
+      setSuppressHostPlaybackEvents(true);
+      setHostResyncRequestedAt(requestedAt);
+      videoSync.requestSync();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [canControlPlayback, joinedRoomId, videoSync]);
+
+  useEffect(() => {
+    if (!canControlPlayback || !hostResyncRequestedAt) {
+      return;
+    }
+
+    if (videoSync.lastStateUpdateAt < hostResyncRequestedAt) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setSuppressHostPlaybackEvents(false);
+      setHostResyncRequestedAt(0);
+    }, 200);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [canControlPlayback, hostResyncRequestedAt, videoSync.lastStateUpdateAt]);
 
   // Fetch room data via REST
   const fetchRoom = useCallback(async () => {
     if (!roomId) return;
 
     try {
-      await roomService.joinRoom(roomId);
-      const roomData = await roomService.getRoom(roomId);
+      const [roomData, memberList] = await Promise.all([
+        roomService.getRoom(roomId),
+        roomService.getMembers(roomId),
+      ]);
+
+      const isMember = memberList.some((member) => member.userId === user?.id);
+
+      if (!isMember) {
+        navigate(`/rooms/${roomId}/join`, { replace: true });
+        return;
+      }
+
       setRoom(roomData);
+      setMembers(memberList);
       setJoinedRoomId(roomId);
     } catch {
       setJoinedRoomId('');
@@ -50,7 +112,7 @@ export const RoomPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [roomId]);
+  }, [navigate, roomId, user?.id]);
 
   useEffect(() => {
     void fetchRoom();
@@ -106,7 +168,6 @@ export const RoomPage: React.FC = () => {
     if (!roomsSocket || !isConnected || !joinedRoomId) return;
 
     roomsSocket.emit('join_room', { roomId: joinedRoomId });
-    requestSync();
 
     roomsSocket.on('room_joined', handleRoomJoined);
     roomsSocket.on('member_joined', handleMemberJoined);
@@ -131,7 +192,6 @@ export const RoomPage: React.FC = () => {
     handleMemberLeft,
     handleRoomClosed,
     handleError,
-    requestSync,
   ]);
 
   if (loading) {
@@ -159,18 +219,39 @@ export const RoomPage: React.FC = () => {
         <div className={styles.videoArea}>
           <VideoPlayer
             videoState={videoSync.videoState}
-            onPlay={(time) => videoSync.play(time)}
-            onPause={(time) => videoSync.pause(time)}
-            onSeek={(time) => videoSync.seek(time)}
+            canInteract={canControlPlayback}
+            suppressAuthorityEvents={suppressHostPlaybackEvents}
+            onResync={videoSync.requestSync}
+            onPlay={canControlPlayback ? (time) => videoSync.play(time) : undefined}
+            onPause={canControlPlayback ? (time) => videoSync.pause(time) : undefined}
+            onSeek={canControlPlayback ? (time) => videoSync.seek(time) : undefined}
           />
           <div className={styles.playlistArea}>
             <PlaylistPanel
               playlist={playlist.playlist}
               currentVideoId={videoSync.videoState?.videoId ?? null}
+              canControlPlayback={canControlPlayback}
+              canManagePlaylist={canManagePlaylist}
               onAddVideo={playlist.addVideo}
               onRemoveVideo={playlist.removeVideo}
-              onPlayNext={playlist.playNext}
-              onPlayPrevious={playlist.playPrevious}
+              onPlayItem={(item) => {
+                if (!canControlPlayback) return;
+
+                videoSync.changeVideo(
+                  item.videoId,
+                  item.title,
+                  item.thumbnail ?? undefined,
+                  true,
+                );
+              }}
+              onPlayNext={() => {
+                if (!canControlPlayback) return;
+                playlist.playNext();
+              }}
+              onPlayPrevious={() => {
+                if (!canControlPlayback) return;
+                playlist.playPrevious();
+              }}
             />
           </div>
         </div>

@@ -14,7 +14,17 @@ export class VideoSyncService {
     });
 
     if (!state) return null;
-    return this.toVideoStateResponse(state);
+
+    const projectedState = state.isPlaying
+      ? {
+          ...state,
+          currentTime:
+            state.currentTime +
+            ((Date.now() - state.lastUpdated.getTime()) / 1000) * state.playbackRate,
+        }
+      : state;
+
+    return this.toVideoStateResponse(projectedState);
   }
 
   async updatePlayState(
@@ -46,6 +56,7 @@ export class VideoSyncService {
     videoId: string,
     videoTitle?: string,
     videoThumbnail?: string,
+    autoPlay = false,
   ): Promise<VideoStateResponseDto> {
     const state = await this.prisma.videoState.upsert({
       where: { roomId },
@@ -54,7 +65,7 @@ export class VideoSyncService {
         videoTitle: videoTitle ?? null,
         videoThumbnail: videoThumbnail ?? null,
         currentTime: 0,
-        isPlaying: false,
+        isPlaying: autoPlay,
         lastUpdated: new Date(),
       },
       create: {
@@ -62,6 +73,7 @@ export class VideoSyncService {
         videoId,
         videoTitle: videoTitle ?? null,
         videoThumbnail: videoThumbnail ?? null,
+        isPlaying: autoPlay,
       },
     });
 

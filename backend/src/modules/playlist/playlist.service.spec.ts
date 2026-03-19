@@ -107,17 +107,17 @@ describe('PlaylistService', () => {
   });
 
   describe('removeVideo', () => {
-    it('should allow owner to remove their own item', async () => {
+    it('should allow host to remove playlist items', async () => {
       prisma.playlistItem.findUnique.mockResolvedValue(mockPlaylistItem);
       prisma.playlistItem.delete.mockResolvedValue({});
       prisma.playlistItem.findMany.mockResolvedValue([]);
       prisma.$transaction.mockResolvedValue([]);
 
-      await service.removeVideo('room-1', 'item-1', 'user-1', RoomRole.MEMBER);
+      await service.removeVideo('room-1', 'item-1', 'host-1', RoomRole.HOST);
       expect(prisma.playlistItem.delete).toHaveBeenCalled();
     });
 
-    it('should throw ForbiddenException when MEMBER tries to remove others item', async () => {
+    it('should throw ForbiddenException when member tries to remove any item', async () => {
       prisma.playlistItem.findUnique.mockResolvedValue({
         ...mockPlaylistItem,
         addedById: 'user-2',
@@ -128,17 +128,15 @@ describe('PlaylistService', () => {
       ).rejects.toThrow(ForbiddenException);
     });
 
-    it('should allow HOST to remove any item', async () => {
+    it('should throw ForbiddenException when moderator tries to remove any item', async () => {
       prisma.playlistItem.findUnique.mockResolvedValue({
         ...mockPlaylistItem,
         addedById: 'user-2',
       });
-      prisma.playlistItem.delete.mockResolvedValue({});
-      prisma.playlistItem.findMany.mockResolvedValue([]);
-      prisma.$transaction.mockResolvedValue([]);
 
-      await service.removeVideo('room-1', 'item-1', 'user-1', RoomRole.HOST);
-      expect(prisma.playlistItem.delete).toHaveBeenCalled();
+      await expect(
+        service.removeVideo('room-1', 'item-1', 'mod-1', RoomRole.MODERATOR),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it('should throw NotFoundException when item not found', async () => {
@@ -157,6 +155,16 @@ describe('PlaylistService', () => {
           'room-1',
           [{ id: 'item-1', position: 1 }],
           RoomRole.MEMBER,
+        ),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw ForbiddenException when MODERATOR tries to reorder', async () => {
+      await expect(
+        service.reorderPlaylist(
+          'room-1',
+          [{ id: 'item-1', position: 1 }],
+          RoomRole.MODERATOR,
         ),
       ).rejects.toThrow(ForbiddenException);
     });

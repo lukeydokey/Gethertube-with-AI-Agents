@@ -111,7 +111,11 @@ export const RoomListPage: React.FC = () => {
         {!loading && !error && rooms.length > 0 && (
           <div className={styles.grid}>
             {rooms.map((room) => (
-              <RoomCard key={room.id} room={room} />
+              <RoomCard
+                key={room.id}
+                room={room}
+                to={activeTab === 'public' ? `/rooms/${room.id}/join` : `/rooms/${room.id}`}
+              />
             ))}
           </div>
         )}

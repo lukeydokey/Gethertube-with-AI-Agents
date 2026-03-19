@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSocket } from './useSocket';
+import { useToast } from './useToast';
 import type { PlaylistItemResponse } from '@/types/playlist.types';
 
 interface AddVideoParams {
@@ -20,6 +21,7 @@ interface UsePlaylistReturn {
 
 export const usePlaylist = (roomId: string): UsePlaylistReturn => {
   const { playlistSocket } = useSocket();
+  const { showToast } = useToast();
   const [playlist, setPlaylist] = useState<PlaylistItemResponse[]>([]);
 
   useEffect(() => {
@@ -37,17 +39,23 @@ export const usePlaylist = (roomId: string): UsePlaylistReturn => {
       setPlaylist((prev) => prev.filter((item) => item.id !== payload.itemId));
     };
 
+    const handlePlaylistError = (payload: { message: string }) => {
+      showToast(payload.message, 'error');
+    };
+
     playlistSocket.on('playlist_updated', handlePlaylistUpdated);
     playlistSocket.on('video_added', handleVideoAdded);
     playlistSocket.on('video_removed', handleVideoRemoved);
+    playlistSocket.on('error', handlePlaylistError);
     playlistSocket.emit('join_playlist_room', { roomId });
 
     return () => {
       playlistSocket.off('playlist_updated', handlePlaylistUpdated);
       playlistSocket.off('video_added', handleVideoAdded);
       playlistSocket.off('video_removed', handleVideoRemoved);
+      playlistSocket.off('error', handlePlaylistError);
     };
-  }, [playlistSocket, roomId]);
+  }, [playlistSocket, roomId, showToast]);
 
   const addVideo = useCallback(
     (params: AddVideoParams) => {

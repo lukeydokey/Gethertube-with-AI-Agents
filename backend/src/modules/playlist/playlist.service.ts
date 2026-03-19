@@ -68,11 +68,8 @@ export class PlaylistService {
       throw new NotFoundException('Playlist item not found');
     }
 
-    // 본인이 추가한 항목이거나 HOST/MODERATOR만 삭제 가능
-    if (item.addedById !== userId && role === RoomRole.MEMBER) {
-      throw new ForbiddenException(
-        'Only the item owner or moderators can remove this item',
-      );
+    if (role !== RoomRole.HOST) {
+      throw new ForbiddenException('Only the host can remove playlist items');
     }
 
     await this.prisma.playlistItem.delete({ where: { id: itemId } });
@@ -86,10 +83,8 @@ export class PlaylistService {
     items: ReorderItemDto[],
     role: RoomRole,
   ): Promise<PlaylistItemResponseDto[]> {
-    if (role === RoomRole.MEMBER) {
-      throw new ForbiddenException(
-        'Only hosts and moderators can reorder the playlist',
-      );
+    if (role !== RoomRole.HOST) {
+      throw new ForbiddenException('Only the host can reorder the playlist');
     }
 
     // Validate all item IDs belong to this room

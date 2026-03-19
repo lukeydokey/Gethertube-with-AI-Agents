@@ -1,4 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import { getCurrentInternalPath, saveReturnTo } from '@/utils/authRedirect';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
@@ -50,6 +51,7 @@ api.interceptors.response.use(
       // Prevent infinite redirect loop
       if (currentPath !== '/login' && currentPath !== '/auth/callback') {
         localStorage.removeItem('accessToken');
+        saveReturnTo(getCurrentInternalPath());
         window.location.href = '/login';
       }
     }
